@@ -1,0 +1,49 @@
+# Definição operacional das síndromes
+
+As síndromes abaixo representam uma versão inicial, simplificada e moldável da proposta. O foco está nos principais sintomas e nas principais doenças/eventos que cada grupo pode ajudar a captar.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+source("R/00_pacotes.R")
+source("R/01_config_sindromes.R")
+
+sindromes_config |>
+  dplyr::select(
+    sindrome_id, nome, prioridade, sintomas_principais,
+    doencas_relacionadas, cids_relacionados
+  ) |>
+  knitr::kable()
+```
+
+## Princípio geral
+
+A classificação considera sete síndromes febris mutuamente exclusivas. A febre é considerada condição necessária para a classificação textual por regex e por LLM. Quando houver CID informativo, a classificação por CID é considerada soberana.
+
+::: {.callout-important}
+## CID soberano
+
+Quando o CID estiver disponível e for compatível com uma das síndromes definidas, a `classificacao_cid` prevalece sobre a classificação textual. Ainda assim, o sistema mantém as classificações por regex e LLM para auditoria.
+:::
+
+## Síndromes incluídas
+
+```{r results='asis'}
+for (i in seq_len(nrow(sindromes_config))) {
+  x <- sindromes_config[i, ]
+
+  cat('<div class="syndrome-card">')
+  cat('<h3>', x$nome, '</h3>')
+  cat('<p><strong>ID:</strong> ', x$sindrome_id, '</p>')
+  cat('<p><strong>Definição operacional:</strong> ', x$descricao, '</p>')
+  cat('<p><strong>Sintomas principais:</strong> ', x$sintomas_principais, '</p>')
+  cat('<p><strong>Doenças/eventos relacionados:</strong> ', x$doencas_relacionadas, '</p>')
+  cat('<p><strong>CIDs relacionados:</strong> ', x$cids_relacionados, '</p>')
+  cat('</div>')
+}
+```
+
+## Observações metodológicas
+
+As definições aqui apresentadas não pretendem encerrar a discussão clínica ou epidemiológica. Elas funcionam como uma primeira versão operacional para desenvolvimento do pipeline. O código será mantido parametrizável para permitir ajustes posteriores de sintomas, CIDs, prioridades e regras de classificação.

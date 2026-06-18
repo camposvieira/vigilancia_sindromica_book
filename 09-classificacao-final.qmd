@@ -1,0 +1,206 @@
+---
+title: "Classificação final"
+---
+
+```{r}
+#| label: setup-classificacao-final
+#| message: false
+#| warning: false
+
+source("R/00_pacotes.R")
+source("R/04_duckdb.R")
+source("R/10_classificacao_final.R")
+```
+
+## Objetivo
+
+Este capítulo consolida as três camadas do pipeline em uma única classificação sindrômica final por atendimento.
+
+A etapa anterior comparou CID, regex e LLM sem decidir qual camada deveria prevalecer. Nesta etapa, a regra decisória é aplicada de forma explícita, transparente e auditável.
+
+## Princípio decisório
+
+A classificação final segue uma regra hierárquica, mas com distinção entre CIDs específicos e CIDs inespecíficos.
+
+```text
+1. CID específico para uma síndrome operacional → prevalece.
+2. CID genérico ou inespecífico → pode ser refinado pelo texto clínico.
+3. Regex e LLM concordantes → classificação textual aceita.
+4. Apenas uma camada textual classifica → classificação aceita com revisão recomendada.
+5. Regex e LLM divergentes → resolução por prioridade sindrômica operacional, com revisão recomendada.
+6. Nenhuma camada classifica → atendimento permanece como não classificado.
+```
+
+Essa abordagem preserva a utilidade operacional do CID, mas mantém as camadas textuais como apoio para situações em que a Nesta etapa, “CID soberano” não significa que qualquer CID deve prevalecer sobre o texto clínico. Códigos como `R50` ou `B34`, por exemplo, indicam um quadro febril ou viral, mas não necessariamente definem uma síndrome operacional detalhada. Nesses casos, se a queixa ou anamnese trouxerem achados mais específicos — como sangramento, exantema, sintomas respiratórios ou sinais meníngeos — a classificação textual pode refinar a categoria final.
+
+## Prioridade sindrômica operacional
+
+Nas situações em que CID não é informativo e as camadas textuais divergem, a escolha é feita por prioridade sindrômica operacional. Essa regra não representa probabilidade etiológica; ela apenas torna explícita a preferência por síndromes menos frequentes, mais específicas ou potencialmente mais relevantes para investigação.
+
+```{r}
+#| label: tabela-prioridade-sindromica-final
+
+knitr::kable(
+  get_prioridade_sindromica_final(),
+  caption = "Prioridade operacional usada para resolver divergências textuais"
+)
+```
+
+## Leitura da base comparativa
+
+```{r}
+#| label: ler-comparacao-final
+
+con <- connect_duckdb()
+init_duckdb_schema(con)
+
+comparacao_camadas <- read_comparacao_camadas(con)
+
+list(
+  registros_comparacao = nrow(comparacao_camadas),
+  colunas_comparacao = ncol(comparacao_camadas)
+)
+```
+
+## Construção da classificação final
+
+```{r}
+#| label: construir-classificacao-final
+
+classificacao_final <- build_classificacao_final(comparacao_camadas)
+
+knitr::kable(
+  classificacao_final |>
+    dplyr::select(
+      record_id,
+      dplyr::any_of(c("cid", "cid_nome")),
+      sindrome_cid,
+      sindrome_regex,
+      sindrome_llm,
+      sindrome_final,
+      fonte_classificacao_final,
+      revisao_manual_recomendada
+    ) |>
+    dplyr::slice_head(n = 15),
+  caption = "Exemplo da classificação final por atendimento"
+)
+```
+
+## Distribuição da classificação final
+
+```{r}
+#| label: tabela-classificacao-final
+
+resumo_final <- summarise_classificacao_final(classificacao_final)
+
+knitr::kable(
+  resumo_final,
+  caption = "Distribuição dos atendimentos segundo a classificação final"
+)
+```
+
+```{r}
+#| label: grafico-classificacao-final
+#| fig-cap: "Distribuição dos atendimentos segundo a classificação final."
+
+plot_classificacao_final(classificacao_final)
+```
+
+## Fonte da decisão final
+
+A tabela abaixo mostra qual regra ou camada foi responsável pela classificação final. Esse resumo é importante para avaliar a dependência do pipeline em relação ao CID e o papel complementar das camadas textuais.
+
+```{r}
+#| label: tabela-fontes-final
+
+fontes_final <- summarise_fontes_classificacao_final(classificacao_final)
+
+knitr::kable(
+  fontes_final,
+  caption = "Fonte da classificação final"
+)
+```
+
+```{r}
+#| label: grafico-fontes-final
+#| fig-cap: "Fonte utilizada para definir a classificação final."
+
+plot_fontes_classificacao_final(classificacao_final)
+```
+
+## Revisão manual recomendada
+
+A recomendação de revisão manual não impede o uso operacional da classificação. Ela apenas sinaliza registros em que a decisão dependeu de evidência textual incompleta, de apenas uma camada textual ou de resolução de divergência entre regex e LLM.
+
+```{r}
+#| label: tabela-revisao-manual-final
+
+knitr::kable(
+  summarise_revisao_manual(classificacao_final),
+  caption = "Registros com recomendação de revisão manual"
+)
+```
+
+```{r}
+#| label: amostra-auditoria-final
+
+amostra_auditoria_final <- selecionar_auditoria_classificacao_final(
+  classificacao_final = classificacao_final,
+  n = 25
+)
+
+knitr::kable(
+  amostra_auditoria_final |>
+    dplyr::select(
+      record_id,
+      dplyr::any_of(c("cid", "cid_nome")),
+      sindrome_cid,
+      sindrome_regex,
+      sindrome_llm,
+      sindrome_final,
+      fonte_classificacao_final,
+      motivo_revisao,
+      justificativa_llm
+    ),
+  caption = "Amostra prioritária para auditoria da classificação final"
+)
+```
+
+## Persistência
+
+A classificação final é persistida no DuckDB para uso nos capítulos seguintes, especialmente nas análises temporais e territoriais.
+
+```{r}
+#| label: persistir-classificacao-final
+
+write_classificacao_final(
+  con = con,
+  dados = classificacao_final,
+  overwrite = TRUE
+)
+
+write_execution_log(
+  con = con,
+  etapa = "classificacao_final",
+  n_registros = nrow(classificacao_final),
+observacao = "Classificação final com CID específico soberano e refinamento textual para CIDs genéricos ou inespecíficos.")
+
+knitr::kable(
+  duckdb_counts(con),
+  caption = "Tabelas persistidas no DuckDB após a classificação final"
+)
+```
+
+## Interpretação
+
+A classificação final transforma o pipeline em uma saída operacional única, mantendo rastreabilidade da decisão. Para cada atendimento, é possível identificar não apenas a síndrome final atribuída, mas também a fonte decisória e a necessidade de revisão manual.
+
+A regra de CID soberano garante alinhamento com a informação estruturada quando o CID é suficientemente específico para a vigilância sindrômica. Entretanto, CIDs genéricos ou inespecíficos não devem impedir o aproveitamento de informações clínicas mais detalhadas presentes na queixa ou na anamnese. Por isso, as camadas regex e LLM podem refinar a classificação final quando o CID apenas indica um quadro febril, viral ou inespecífico, mas o texto aponta uma síndrome operacional mais definida.
+
+Essa base final será a entrada para as próximas etapas do relatório, incluindo séries temporais, distribuição territorial, monitoramento por unidade e auditoria metodológica.
+
+```{r}
+#| label: fechar-conexao-final
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```

@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>8&nbsp; Classificação por LLM – Vigilância Sindrômica de Síndromes Febris</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./08-comparacao-cid-regex-llm.html" rel="next">
+<link href="./06-classificacao-regex.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-0e03cfb9dbb0624f7d4637f4d44cdad8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./07-classificacao-llm.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Classificação por LLM</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Vigilância Sindrômica de Síndromes Febris</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Apresentação</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-contexto.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Contexto e objetivo</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-definicao-sindromes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Definição operacional das síndromes</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-arquitetura-classificacao.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Arquitetura inicial de classificação</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-preparacao-dados.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Preparação e padronização dos dados</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-classificacao-cid.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Classificação por CID</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-classificacao-regex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Classificação por regex</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-classificacao-llm.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Classificação por LLM</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-comparacao-cid-regex-llm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Comparação CID × regex × LLM</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-classificacao-final.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Classificação final</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-series-historicas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Séries históricas</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-auditoria-limitacoes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Auditoria e limitações</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-proximos-passos-produto.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Próximos passos e fechamento da entrega</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#objetivo-da-camada-llm" id="toc-objetivo-da-camada-llm" class="nav-link active" data-scroll-target="#objetivo-da-camada-llm"><span class="header-section-number">8.1</span> Objetivo da camada LLM</a></li>
+  <li><a href="#desenho-metodológico" id="toc-desenho-metodológico" class="nav-link" data-scroll-target="#desenho-metodológico"><span class="header-section-number">8.2</span> Desenho metodológico</a></li>
+  <li><a href="#provedores-disponíveis" id="toc-provedores-disponíveis" class="nav-link" data-scroll-target="#provedores-disponíveis"><span class="header-section-number">8.3</span> Provedores disponíveis</a></li>
+  <li><a href="#saída-esperada" id="toc-saída-esperada" class="nav-link" data-scroll-target="#saída-esperada"><span class="header-section-number">8.4</span> Saída esperada</a></li>
+  <li><a href="#prompt-utilizado" id="toc-prompt-utilizado" class="nav-link" data-scroll-target="#prompt-utilizado"><span class="header-section-number">8.5</span> Prompt utilizado</a></li>
+  <li><a href="#exemplo-de-resposta-estruturada" id="toc-exemplo-de-resposta-estruturada" class="nav-link" data-scroll-target="#exemplo-de-resposta-estruturada"><span class="header-section-number">8.6</span> Exemplo de resposta estruturada</a></li>
+  <li><a href="#execução-na-base-sintética" id="toc-execução-na-base-sintética" class="nav-link" data-scroll-target="#execução-na-base-sintética"><span class="header-section-number">8.7</span> Execução na base sintética</a></li>
+  <li><a href="#resumo-da-classificação-por-llm" id="toc-resumo-da-classificação-por-llm" class="nav-link" data-scroll-target="#resumo-da-classificação-por-llm"><span class="header-section-number">8.8</span> Resumo da classificação por LLM</a></li>
+  <li><a href="#qualidade-da-resposta-estruturada" id="toc-qualidade-da-resposta-estruturada" class="nav-link" data-scroll-target="#qualidade-da-resposta-estruturada"><span class="header-section-number">8.9</span> Qualidade da resposta estruturada</a></li>
+  <li><a href="#amostra-para-auditoria" id="toc-amostra-para-auditoria" class="nav-link" data-scroll-target="#amostra-para-auditoria"><span class="header-section-number">8.10</span> Amostra para auditoria</a></li>
+  <li><a href="#uso-com-llm-local" id="toc-uso-com-llm-local" class="nav-link" data-scroll-target="#uso-com-llm-local"><span class="header-section-number">8.11</span> Uso com LLM local</a></li>
+  <li><a href="#validação-local-com-ollamaqwen" id="toc-validação-local-com-ollamaqwen" class="nav-link" data-scroll-target="#validação-local-com-ollamaqwen"><span class="header-section-number">8.12</span> Validação local com Ollama/Qwen</a>
+  <ul class="collapse">
+  <li><a href="#métricas-da-execução-local" id="toc-métricas-da-execução-local" class="nav-link" data-scroll-target="#métricas-da-execução-local"><span class="header-section-number">8.12.1</span> Métricas da execução local</a></li>
+  <li><a href="#interpretação-da-validação" id="toc-interpretação-da-validação" class="nav-link" data-scroll-target="#interpretação-da-validação"><span class="header-section-number">8.12.2</span> Interpretação da validação</a></li>
+  <li><a href="#limitações-do-teste" id="toc-limitações-do-teste" class="nav-link" data-scroll-target="#limitações-do-teste"><span class="header-section-number">8.12.3</span> Limitações do teste</a></li>
+  </ul></li>
+  <li><a href="#interpretação" id="toc-interpretação" class="nav-link" data-scroll-target="#interpretação"><span class="header-section-number">8.13</span> Interpretação</a></li>
+  <li><a href="#persistência" id="toc-persistência" class="nav-link" data-scroll-target="#persistência"><span class="header-section-number">8.14</span> Persistência</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Classificação por LLM</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/00_pacotes.R"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/04_duckdb.R"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/07_llm_clients.R"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/08_llm_classification.R"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<section id="objetivo-da-camada-llm" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="objetivo-da-camada-llm"><span class="header-section-number">8.1</span> Objetivo da camada LLM</h2>
+<p>A terceira camada do pipeline utiliza um modelo de linguagem para interpretar o texto clínico e atribuir uma síndrome febril principal.</p>
+<p>Diferentemente da camada de CID, que utiliza códigos diagnósticos estruturados, e da camada regex, que utiliza padrões textuais explícitos, a camada LLM busca capturar uma interpretação clínica resumida do atendimento a partir da queixa e da anamnese.</p>
+<p>Nesta primeira versão, a LLM tem papel <strong>interpretativo e comparativo</strong>. Ela não substitui automaticamente o CID. Sua principal função é produzir uma leitura textual independente para comparação com CID e regex, apoiar auditoria e permitir refinamento quando a codificação estruturada for genérica ou pouco informativa.</p>
+</section>
+<section id="desenho-metodológico" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="desenho-metodológico"><span class="header-section-number">8.2</span> Desenho metodológico</h2>
+<p>A camada LLM foi desenhada com três princípios:</p>
+<ol type="1">
+<li><p><strong>Independência do CID e da regex</strong><br>
+A LLM classifica apenas o texto clínico.</p></li>
+<li><p><strong>Saída estruturada e auditável</strong><br>
+O modelo deve retornar JSON válido, sem texto livre fora do objeto JSON.</p></li>
+<li><p><strong>Desacoplamento do provedor</strong><br>
+O pipeline pode funcionar com modo simulado, modelo local ou API externa.</p></li>
+</ol>
+<p>A arquitetura implementada é:</p>
+<pre class="text"><code>texto clínico
+↓
+prompt sindrômico
+↓
+cliente LLM
+     ├── mock
+     ├── ollama
+     ├── gemini
+     └── openai_compatible
+↓
+JSON estruturado
+↓
+validação
+↓
+tb_classificacao_llm</code></pre>
+</section>
+<section id="provedores-disponíveis" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="provedores-disponíveis"><span class="header-section-number">8.3</span> Provedores disponíveis</h2>
+<p>A função <code>llm_generate()</code> atua como uma interface única para diferentes provedores.</p>
+<p>Nesta etapa, o modo padrão é <code>mock</code>. Isso permite que o Quarto Book continue renderizando integralmente mesmo sem internet, sem chave de API e sem modelo local instalado.</p>
+<p>Em uso operacional, a configuração pode ser alterada por variáveis de ambiente, sem modificar a lógica do pipeline.</p>
+<p>Exemplo com Ollama local:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_PROVIDER =</span> <span class="st">"ollama"</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_MODEL =</span> <span class="st">"qwen3.5:latest"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_BASE_URL =</span> <span class="st">"http://localhost:11434"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_JSON_MODE =</span> <span class="st">"true"</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_TIMEOUT_SEC =</span> <span class="st">"180"</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_MAX_RECORDS =</span> <span class="st">"30"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>O nome do modelo deve corresponder exatamente ao nome listado por:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> list</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Exemplo com Gemini:</p>
+<pre class="text"><code>LLM_PROVIDER=gemini
+LLM_MODEL=gemini-1.5-flash
+LLM_API_KEY=sua_chave_aqui</code></pre>
+<p>Exemplo com API OpenAI-compatible:</p>
+<pre class="text"><code>LLM_PROVIDER=openai_compatible
+LLM_MODEL=nome_do_modelo
+LLM_BASE_URL=https://api.exemplo.com/v1
+LLM_API_KEY=sua_chave_aqui</code></pre>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>usar_llm_real_no_render <span class="ot">&lt;-</span> <span class="fu">tolower</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Sys.getenv</span>(<span class="st">"RUN_REAL_LLM_IN_RENDER"</span>, <span class="at">unset =</span> <span class="st">"false"</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"true"</span>, <span class="st">"1"</span>, <span class="st">"yes"</span>, <span class="st">"sim"</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span>usar_llm_real_no_render) {</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Sys.setenv</span>(</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">LLM_PROVIDER =</span> <span class="st">"mock"</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">LLM_MODEL =</span> <span class="st">"mock-sindromico-v1"</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">LLM_BASE_URL =</span> <span class="st">""</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">LLM_JSON_MODE =</span> <span class="st">"true"</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">LLM_TIMEOUT_SEC =</span> <span class="st">"120"</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>llm_config <span class="ot">&lt;-</span> <span class="fu">make_llm_config</span>()</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>max_records_llm <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Sys.getenv</span>(<span class="st">"LLM_MAX_RECORDS"</span>, <span class="at">unset =</span> <span class="st">"200"</span>)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>valor_config <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(x) <span class="sc">||</span> <span class="fu">length</span>(x) <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="cn">NA_character_</span>)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(x) <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;&amp;</span> <span class="fu">is.na</span>(x)) {</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="cn">NA_character_</span>)</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.character</span>(x[[<span class="dv">1</span>]])</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>config_tbl <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">provider =</span> <span class="fu">valor_config</span>(llm_config<span class="sc">$</span>provider),</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">model =</span> <span class="fu">valor_config</span>(llm_config<span class="sc">$</span>model),</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">base_url =</span> <span class="fu">valor_config</span>(llm_config<span class="sc">$</span>base_url),</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">temperature =</span> <span class="fu">valor_config</span>(llm_config<span class="sc">$</span>temperature),</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_tokens =</span> <span class="fu">valor_config</span>(llm_config<span class="sc">$</span>max_tokens),</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">timeout_sec =</span> <span class="fu">valor_config</span>(llm_config<span class="sc">$</span>timeout_sec),</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">json_mode =</span> <span class="fu">valor_config</span>(llm_config<span class="sc">$</span>json_mode),</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_records =</span> <span class="fu">valor_config</span>(max_records_llm)</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">enframe</span>(</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"parametro"</span>,</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">value =</span> <span class="st">"valor"</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>  config_tbl,</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Configuração ativa da camada LLM"</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Configuração ativa da camada LLM</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">parametro</th>
+<th style="text-align: left;">valor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">provider</td>
+<td style="text-align: left;">mock</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">model</td>
+<td style="text-align: left;">mock-sindromico-v1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">base_url</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">temperature</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">max_tokens</td>
+<td style="text-align: left;">800</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">timeout_sec</td>
+<td style="text-align: left;">120</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">json_mode</td>
+<td style="text-align: left;">TRUE</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">max_records</td>
+<td style="text-align: left;">200</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="saída-esperada" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="saída-esperada"><span class="header-section-number">8.4</span> Saída esperada</h2>
+<p>O LLM deve retornar exclusivamente um JSON com os seguintes campos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"sindrome_principal_llm"</span><span class="fu">:</span> <span class="st">"febril_respiratoria"</span><span class="fu">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"febre_presente"</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"febre_negada"</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"sintomas_identificados"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"febre"</span><span class="ot">,</span> <span class="st">"tosse"</span><span class="ot">,</span> <span class="st">"coriza"</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"justificativa_llm"</span><span class="fu">:</span> <span class="st">"Texto menciona febre, tosse e coriza, compatível com síndrome febril respiratória."</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Não é utilizada confiança numérica. A justificativa curta serve para auditoria técnica e revisão por especialistas.</p>
+</section>
+<section id="prompt-utilizado" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="prompt-utilizado"><span class="header-section-number">8.5</span> Prompt utilizado</h2>
+<p>O prompt abaixo é o texto enviado ao modelo para cada atendimento. Ele instrui a LLM a usar apenas o texto clínico, restringe as categorias permitidas e exige uma resposta em JSON válido.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Prompt completo usado pela camada LLM
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Você é um classificador sindrômico para vigilância em saúde.
+
+Sua tarefa é ler exclusivamente o texto clínico de um atendimento e classificar o registro em UMA síndrome febril principal.
+
+Você NÃO deve usar CID, diagnóstico codificado, exames laboratoriais externos, dados epidemiológicos externos ou conhecimento sobre surtos em curso. Use apenas o texto clínico informado.
+
+Síndromes permitidas:
+
+1. febril_respiratoria
+   - Febre associada a tosse, coriza, dor de garganta, dispneia, congestão nasal, sintomas gripais ou respiratórios.
+
+2. febril_exantematica
+   - Febre associada a exantema, rash, manchas vermelhas, lesões cutâneas difusas ou quadro febril com erupção de pele.
+
+3. febril_gastrointestinal
+   - Febre associada a diarreia, vômitos, náusea, dor abdominal ou sintomas gastrointestinais predominantes.
+
+4. febril_hemorragica
+   - Febre associada a sangramento, epistaxe, gengivorragia, petéquias, equimoses, manchas roxas, sangue em vômito, urina ou fezes.
+
+5. febril_ictero_hemorragica
+   - Febre associada simultaneamente a icterícia ou sinais como pele/olhos amarelos, colúria, urina escura, e sinais hemorrágicos.
+
+6. febril_neurologica_meningea
+   - Febre associada a rigidez de nuca, sinais meníngeos, convulsão, confusão mental, rebaixamento do nível de consciência, cefaleia intensa com sinais neurológicos.
+
+7. febril_inespecifica
+   - Febre presente, mas sem eixo respiratório, exantemático, gastrointestinal, hemorrágico, ictérico ou neurológico predominante.
+
+8. nao_classificado
+   - Use quando não houver febre descrita, quando a febre estiver negada, ou quando o texto não sustentar uma síndrome febril.
+
+Regras obrigatórias:
+
+- Se houver negação de febre, como "nega febre", "sem febre", "afebril", "não refere febre" ou equivalente, classifique como nao_classificado, exceto se o próprio texto trouxer febre atual clara em outro trecho.
+- Não atribua síndrome febril apenas por sintomas isolados sem febre.
+- Não invente sintomas que não aparecem no texto.
+- Não use confiança numérica.
+- Retorne exclusivamente JSON válido.
+- Não use markdown.
+- Não escreva texto antes ou depois do JSON.
+- Não inclua comentários.
+- Não inclua tags como &lt;think&gt; ou raciocínio passo a passo.
+- Em caso de dúvida, prefira nao_classificado.
+
+Formato obrigatório da resposta:
+
+{
+  "sindrome_principal_llm": "uma_das_sindromes_permitidas",
+  "febre_presente": true,
+  "febre_negada": false,
+  "sintomas_identificados": ["lista", "de", "sintomas"],
+  "justificativa_llm": "justificativa curta, objetiva e auditável"
+}
+
+Texto clínico para classificar:
+
+"""Paciente com febre há dois dias, tosse seca, coriza e dor de garganta. Nega falta de ar."""</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="exemplo-de-resposta-estruturada" class="level2" data-number="8.6">
+<h2 data-number="8.6" class="anchored" data-anchor-id="exemplo-de-resposta-estruturada"><span class="header-section-number">8.6</span> Exemplo de resposta estruturada</h2>
+<p>O exemplo abaixo executa a camada LLM sobre um texto clínico simples. No modo <code>mock</code>, a resposta é simulada; em <code>ollama</code>, <code>gemini</code> ou <code>openai_compatible</code>, o mesmo código chama o provedor configurado.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>exemplo_classificacao <span class="ot">&lt;-</span> <span class="fu">classify_one_by_llm</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">record_id =</span> <span class="st">"exemplo_001"</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">texto_clinico =</span> exemplo_texto,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">config =</span> llm_config</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>exemplo_classificacao <span class="sc">|&gt;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    sindrome_principal_llm,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    febre_presente,</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    febre_negada,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    sintomas_identificados,</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    justificativa_llm,</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    parse_ok,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    provider_llm,</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    modelo_llm</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Exemplo de resposta estruturada produzida pela camada LLM"</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Exemplo de resposta estruturada produzida pela camada LLM</caption>
+<colgroup>
+<col style="width: 11%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 14%">
+<col style="width: 40%">
+<col style="width: 4%">
+<col style="width: 6%">
+<col style="width: 9%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">sindrome_principal_llm</th>
+<th style="text-align: left;">febre_presente</th>
+<th style="text-align: left;">febre_negada</th>
+<th style="text-align: left;">sintomas_identificados</th>
+<th style="text-align: left;">justificativa_llm</th>
+<th style="text-align: left;">parse_ok</th>
+<th style="text-align: left;">provider_llm</th>
+<th style="text-align: left;">modelo_llm</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas respiratórios</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, compatível com febril_respiratoria.</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">mock</td>
+<td style="text-align: left;">mock-sindromico-v1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="execução-na-base-sintética" class="level2" data-number="8.7">
+<h2 data-number="8.7" class="anchored" data-anchor-id="execução-na-base-sintética"><span class="header-section-number">8.7</span> Execução na base sintética</h2>
+<p>A classificação é executada sobre a tabela de atendimentos previamente gravada no DuckDB.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">connect_duckdb</span>()</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">init_duckdb_schema</span>(con)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>atendimentos <span class="ot">&lt;-</span> <span class="fu">read_atendimentos</span>(con)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">glimpse</span>(atendimentos)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 700
+Columns: 17
+$ record_id                   &lt;chr&gt; "SYN0001", "SYN0002", "SYN0003", "SYN0004"…
+$ data_atendimento            &lt;date&gt; 2025-01-02, 2025-01-04, 2025-01-04, 2025-…
+$ unidade                     &lt;chr&gt; "Hospital Municipal B", "Hospital Municipa…
+$ idade                       &lt;dbl&gt; 80, 81, 68, 6, 49, 26, 10, 29, 56, 69, 80,…
+$ sexo                        &lt;chr&gt; "M", "M", "F", "M", "M", "M", "M", "M", "F…
+$ cid                         &lt;chr&gt; "B34", "A39", "B34", "A08", NA, "J06", "A0…
+$ queixa                      &lt;chr&gt; "Febre e dor no corpo", "Febre e cefaleia"…
+$ anamnese                    &lt;chr&gt; "Refere febre não aferida, dor no corpo im…
+$ faixa_etaria                &lt;chr&gt; "60+", "60+", "60+", "5-14", "40-59", "15-…
+$ texto_clinico               &lt;chr&gt; "Febre e dor no corpo Refere febre não afe…
+$ texto_clinico_norm          &lt;chr&gt; "febre e dor no corpo refere febre nao afe…
+$ territorio                  &lt;chr&gt; "AP 2.1", "AP 5.1", "AP 3.2", "AP 5.1", "A…
+$ bairro                      &lt;chr&gt; "Campo Grande", "Botafogo", "Méier", "Camp…
+$ cid_nome                    &lt;chr&gt; "Infecção viral de localização não especif…
+$ sindrome_esperada_sintetica &lt;chr&gt; "febril_inespecifica", "febril_neurologica…
+$ cid_status_sintetico        &lt;chr&gt; "coerente", "coerente", "coerente", "coere…
+$ febre_negada_sintetica      &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, …</code></pre>
+</div>
+</div>
+<p>Para manter a renderização rápida no modo demonstrativo, o capítulo usa uma amostra da base. Em produção, a variável <code>LLM_MAX_RECORDS</code> pode ser ajustada ou removida da lógica de execução.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>classificacao_llm <span class="ot">&lt;-</span> <span class="fu">classify_by_llm</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dados =</span> atendimentos,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">config =</span> llm_config,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_records =</span> max_records_llm</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="fu">write_classificacao_llm</span>(</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">con =</span> con,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">dados =</span> classificacao_llm,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">overwrite =</span> <span class="cn">TRUE</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="fu">write_execution_log</span>(</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">con =</span> con,</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">etapa =</span> <span class="st">"classificacao_llm"</span>,</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_registros =</span> <span class="fu">nrow</span>(classificacao_llm),</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">observacao =</span> <span class="fu">paste</span>(</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Provider:"</span>, llm_config<span class="sc">$</span>provider,</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"| Modelo:"</span>, llm_config<span class="sc">$</span>model,</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"| JSON mode:"</span>, <span class="fu">valor_config</span>(llm_config<span class="sc">$</span>json_mode),</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"| Max records:"</span>, max_records_llm</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>classificacao_llm <span class="sc">|&gt;</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">5</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    record_id,</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    sindrome_principal_llm,</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    febre_presente,</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    febre_negada,</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    sintomas_identificados,</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    justificativa_llm,</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>    parse_ok</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Primeiros registros classificados pela camada LLM"</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Primeiros registros classificados pela camada LLM</caption>
+<colgroup>
+<col style="width: 3%">
+<col style="width: 8%">
+<col style="width: 4%">
+<col style="width: 3%">
+<col style="width: 30%">
+<col style="width: 46%">
+<col style="width: 2%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">record_id</th>
+<th style="text-align: left;">sindrome_principal_llm</th>
+<th style="text-align: left;">febre_presente</th>
+<th style="text-align: left;">febre_negada</th>
+<th style="text-align: left;">sintomas_identificados</th>
+<th style="text-align: left;">justificativa_llm</th>
+<th style="text-align: left;">parse_ok</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SYN0001</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas respiratórios; sintomas gastrointestinais; sangramento; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+<td style="text-align: left;">TRUE</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0002</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sinais neurológicos/meníngeos; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, sinais neurológicos/meníngeos, sintomas inespecíficos, compatível com febril_neurologica_meningea.</td>
+<td style="text-align: left;">TRUE</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0003</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; exantema/manchas; sintomas gastrointestinais; sangramento; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, exantema/manchas, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+<td style="text-align: left;">TRUE</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0004</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas gastrointestinais</td>
+<td style="text-align: left;">Texto menciona febre, sintomas gastrointestinais, compatível com febril_gastrointestinal.</td>
+<td style="text-align: left;">TRUE</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0005</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas respiratórios; exantema/manchas; sintomas gastrointestinais; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, exantema/manchas, sintomas gastrointestinais, sintomas inespecíficos, compatível com febril_exantematica.</td>
+<td style="text-align: left;">TRUE</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="resumo-da-classificação-por-llm" class="level2" data-number="8.8">
+<h2 data-number="8.8" class="anchored" data-anchor-id="resumo-da-classificação-por-llm"><span class="header-section-number">8.8</span> Resumo da classificação por LLM</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>resumo_llm <span class="ot">&lt;-</span> <span class="fu">summarise_llm_classification</span>(classificacao_llm)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>resumo_llm <span class="sc">|&gt;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">prop =</span> scales<span class="sc">::</span><span class="fu">percent</span>(prop, <span class="at">accuracy =</span> <span class="fl">0.1</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Distribuição da classificação por LLM"</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Distribuição da classificação por LLM</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">sindrome_principal_llm</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: left;">prop</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: left;">31.0%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: left;">25.5%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: left;">17.0%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: left;">7.5%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">6.5%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">nao_classificado</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">5.5%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">4.5%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">2.5%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_llm_syndrome_distribution</span>(classificacao_llm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="07-classificacao-llm_files/figure-html/grafico-distribuicao-llm-1.png" class="img-fluid figure-img" width="768"></p>
+<figcaption>Distribuição das síndromes atribuídas pela camada LLM.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="qualidade-da-resposta-estruturada" class="level2" data-number="8.9">
+<h2 data-number="8.9" class="anchored" data-anchor-id="qualidade-da-resposta-estruturada"><span class="header-section-number">8.9</span> Qualidade da resposta estruturada</h2>
+<p>O campo <code>parse_ok</code> indica se a resposta foi interpretada como JSON válido e transformada no esquema esperado.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>classificacao_llm <span class="sc">|&gt;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">count</span>(parse_ok) <span class="sc">|&gt;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">prop =</span> scales<span class="sc">::</span><span class="fu">percent</span>(n <span class="sc">/</span> <span class="fu">sum</span>(n), <span class="at">accuracy =</span> <span class="fl">0.1</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Qualidade do parse da resposta LLM"</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Qualidade do parse da resposta LLM</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">parse_ok</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: left;">prop</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">200</td>
+<td style="text-align: left;">100.0%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>No modo <code>mock</code>, espera-se que <code>parse_ok</code> seja verdadeiro para todos os registros. Em provedores reais, esse indicador será importante para monitorar falhas de formatação, instabilidade de resposta ou necessidade de ajuste do prompt.</p>
+</section>
+<section id="amostra-para-auditoria" class="level2" data-number="8.10">
+<h2 data-number="8.10" class="anchored" data-anchor-id="amostra-para-auditoria"><span class="header-section-number">8.10</span> Amostra para auditoria</h2>
+<p>A amostra abaixo permite revisar, caso a caso, o texto clínico original, a classificação atribuída pela LLM, os sintomas extraídos e a justificativa retornada.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>amostra_auditoria_llm <span class="ot">&lt;-</span> <span class="fu">sample_llm_audit</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dados =</span> atendimentos,</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">classificacao_llm =</span> classificacao_llm,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">10</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>amostra_auditoria_llm <span class="sc">|&gt;</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    record_id,</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    cid,</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    texto_clinico,</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    sindrome_principal_llm,</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    febre_presente,</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    febre_negada,</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    sintomas_identificados,</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    justificativa_llm</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Amostra para auditoria da classificação por LLM"</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Amostra para auditoria da classificação por LLM</caption>
+<colgroup>
+<col style="width: 2%">
+<col style="width: 0%">
+<col style="width: 32%">
+<col style="width: 5%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 20%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">record_id</th>
+<th style="text-align: left;">cid</th>
+<th style="text-align: left;">texto_clinico</th>
+<th style="text-align: left;">sindrome_principal_llm</th>
+<th style="text-align: left;">febre_presente</th>
+<th style="text-align: left;">febre_negada</th>
+<th style="text-align: left;">sintomas_identificados</th>
+<th style="text-align: left;">justificativa_llm</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SYN0001</td>
+<td style="text-align: left;">B34</td>
+<td style="text-align: left;">Febre e dor no corpo Refere febre não aferida, dor no corpo importante, cefaleia e mal estar geral. Nega tosse, nega diarreia e nega sangramento.</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas respiratórios; sintomas gastrointestinais; sangramento; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0002</td>
+<td style="text-align: left;">A39</td>
+<td style="text-align: left;">Febre e cefaleia Criança com febre e convulsão em casa. Sonolenta na chegada, com irritabilidade importante.</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sinais neurológicos/meníngeos; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, sinais neurológicos/meníngeos, sintomas inespecíficos, compatível com febril_neurologica_meningea.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0003</td>
+<td style="text-align: left;">B34</td>
+<td style="text-align: left;">Febre e dor no corpo Paciente relata febre baixa, artralgia e cansaço. Nega sangramentos, nega rash e nega vômitos.</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; exantema/manchas; sintomas gastrointestinais; sangramento; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, exantema/manchas, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0004</td>
+<td style="text-align: left;">A08</td>
+<td style="text-align: left;">Febre e diarreia Relata febre, nausea, episódios de vômito e evacuações líquidas. Sem sintomas respiratórios. !!!</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas gastrointestinais</td>
+<td style="text-align: left;">Texto menciona febre, sintomas gastrointestinais, compatível com febril_gastrointestinal.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0005</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">Febre e manchas FEBRE, manchas avermelhadas no corpo e dor no corpo. Sem diarreia. Sem tosse importante.</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas respiratórios; exantema/manchas; sintomas gastrointestinais; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, exantema/manchas, sintomas gastrointestinais, sintomas inespecíficos, compatível com febril_exantematica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0006</td>
+<td style="text-align: left;">J06</td>
+<td style="text-align: left;">Febre e tosse Pcte com fbre não aferida, odinofagia, coriza e tosse. Relata cansaço e dor no corpo. Nega sintomas gastrointestinais.</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas respiratórios; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, sintomas inespecíficos, compatível com febril_respiratoria.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0007</td>
+<td style="text-align: left;">A05</td>
+<td style="text-align: left;">Febre e diarreia Criança com febre alta, vômitos repetidos e diarreia líquida. Mãe refere pouca aceitação alimentar e sonolência leve.</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas gastrointestinais</td>
+<td style="text-align: left;">Texto menciona febre, sintomas gastrointestinais, compatível com febril_gastrointestinal.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0008</td>
+<td style="text-align: left;">R50</td>
+<td style="text-align: left;">Febre e dor no corpo Refere fbre não aferida, dor no corpo importante, cefaleia e mal estar geral. Nega tosse, nega diarreia e nega sangramento.</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas respiratórios; sintomas gastrointestinais; sangramento; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0009</td>
+<td style="text-align: left;">J06</td>
+<td style="text-align: left;">Febre e tosse FEBRE alta desde ontem, tosse produtiva, congestão nasal e mal estar. Sem manchas na pele. Sem vômitos. Refere piora da tosse durante a noite.</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas respiratórios; exantema/manchas; sintomas gastrointestinais; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, exantema/manchas, sintomas gastrointestinais, sintomas inespecíficos, compatível com febril_exantematica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0010</td>
+<td style="text-align: left;">G03</td>
+<td style="text-align: left;">Febre e cefaleia Paciente com febre, cefaleia intensa, rigidez de nuca e fotofobia. Refere vômitos e piora progressiva desde a manhã.</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">febre; sintomas gastrointestinais; sinais neurológicos/meníngeos; sintomas inespecíficos</td>
+<td style="text-align: left;">Texto menciona febre, sintomas gastrointestinais, sinais neurológicos/meníngeos, sintomas inespecíficos, compatível com febril_neurologica_meningea.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="uso-com-llm-local" class="level2" data-number="8.11">
+<h2 data-number="8.11" class="anchored" data-anchor-id="uso-com-llm-local"><span class="header-section-number">8.11</span> Uso com LLM local</h2>
+<p>Para usar um modelo local via Ollama, não é necessário alterar a lógica do pipeline. Basta definir as variáveis de ambiente antes da execução.</p>
+<p>Exemplo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_PROVIDER =</span> <span class="st">"ollama"</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_MODEL =</span> <span class="st">"qwen3.5:latest"</span>,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_BASE_URL =</span> <span class="st">"http://localhost:11434"</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_JSON_MODE =</span> <span class="st">"true"</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_TIMEOUT_SEC =</span> <span class="st">"180"</span>,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_MAX_RECORDS =</span> <span class="st">"30"</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>quarto<span class="sc">::</span><span class="fu">quarto_render</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Para verificar o nome correto do modelo instalado:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> list</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Para fins de reprodutibilidade, o Quarto Book utiliza <code>mock</code> como padrão. Em uso operacional ou em validação técnica, o mesmo capítulo pode ser executado com <code>ollama</code>, <code>gemini</code> ou <code>openai_compatible</code>, mantendo a mesma interface de classificação.</p>
+</section>
+<section id="validação-local-com-ollamaqwen" class="level2" data-number="8.12">
+<h2 data-number="8.12" class="anchored" data-anchor-id="validação-local-com-ollamaqwen"><span class="header-section-number">8.12</span> Validação local com Ollama/Qwen</h2>
+<p>Além do modo <code>mock</code>, utilizado por padrão para garantir reprodutibilidade, a camada LLM foi testada localmente com um modelo Qwen executado via Ollama.</p>
+<p>O objetivo deste teste foi verificar se a arquitetura da camada LLM consegue substituir a resposta simulada por uma chamada real a um modelo local, mantendo a mesma interface de entrada e saída do pipeline. Dessa forma, a função da validação não foi medir desempenho classificatório definitivo, mas confirmar a viabilidade técnica da camada LLM em um ambiente real.</p>
+<p>A execução foi realizada em ambiente local com GPU NVIDIA GeForce RTX 4060 Laptop GPU, com aproximadamente 8 GB de VRAM. O modelo foi chamado via endpoint local do Ollama.</p>
+<p>A configuração utilizada foi:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_PROVIDER =</span> <span class="st">"ollama"</span>,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_MODEL =</span> <span class="st">"qwen3.5:latest"</span>,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_BASE_URL =</span> <span class="st">"http://localhost:11434"</span>,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_JSON_MODE =</span> <span class="st">"false"</span>,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_TIMEOUT_SEC =</span> <span class="st">"180"</span>,</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">LLM_MAX_RECORDS =</span> <span class="st">"30"</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Para esse modelo local, optou-se por <code>LLM_JSON_MODE=false</code>. Nessa configuração, o Ollama retorna o conteúdo principal no campo <code>response</code>, e o parser do pipeline extrai e valida o objeto JSON retornado pelo modelo. Essa estratégia foi mais estável no teste local do que forçar <code>format = "json"</code> diretamente na chamada ao Ollama.</p>
+<section id="métricas-da-execução-local" class="level3" data-number="8.12.1">
+<h3 data-number="8.12.1" class="anchored" data-anchor-id="métricas-da-execução-local"><span class="header-section-number">8.12.1</span> Métricas da execução local</h3>
+<p>O teste foi realizado com uma amostra controlada de 30 registros sintéticos. O modelo retornou respostas estruturadas em JSON válido para todos os registros avaliados.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 52%">
+<col style="width: 47%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Métrica</th>
+<th style="text-align: right;">Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Data da execução</td>
+<td style="text-align: right;">2026-06-17 23:14:14</td>
+</tr>
+<tr class="even">
+<td>Provider</td>
+<td style="text-align: right;">ollama</td>
+</tr>
+<tr class="odd">
+<td>Modelo</td>
+<td style="text-align: right;">qwen3.5:latest</td>
+</tr>
+<tr class="even">
+<td>Endpoint</td>
+<td style="text-align: right;">http://localhost:11434</td>
+</tr>
+<tr class="odd">
+<td>JSON mode</td>
+<td style="text-align: right;">false</td>
+</tr>
+<tr class="even">
+<td>Timeout configurado</td>
+<td style="text-align: right;">180 s</td>
+</tr>
+<tr class="odd">
+<td>Registros processados</td>
+<td style="text-align: right;">30</td>
+</tr>
+<tr class="even">
+<td>Respostas com JSON válido</td>
+<td style="text-align: right;">30</td>
+</tr>
+<tr class="odd">
+<td>Falhas de parse</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>Proporção de <code>parse_ok</code></td>
+<td style="text-align: right;">100%</td>
+</tr>
+<tr class="odd">
+<td>Tempo total de execução</td>
+<td style="text-align: right;">1596 s</td>
+</tr>
+<tr class="even">
+<td>Tempo médio por registro</td>
+<td style="text-align: right;">53,2 s</td>
+</tr>
+<tr class="odd">
+<td>GPU</td>
+<td style="text-align: right;">NVIDIA GeForce RTX 4060 Laptop GPU</td>
+</tr>
+<tr class="even">
+<td>VRAM total</td>
+<td style="text-align: right;">8188 MB</td>
+</tr>
+<tr class="odd">
+<td>VRAM usada antes da execução</td>
+<td style="text-align: right;">72 MB</td>
+</tr>
+<tr class="even">
+<td>VRAM usada depois da execução</td>
+<td style="text-align: right;">5338 MB</td>
+</tr>
+<tr class="odd">
+<td>Utilização da GPU antes da execução</td>
+<td style="text-align: right;">0%</td>
+</tr>
+<tr class="even">
+<td>Utilização da GPU depois da execução</td>
+<td style="text-align: right;">95%</td>
+</tr>
+<tr class="odd">
+<td>Temperatura da GPU antes da execução</td>
+<td style="text-align: right;">37 °C</td>
+</tr>
+<tr class="even">
+<td>Temperatura da GPU depois da execução</td>
+<td style="text-align: right;">61 °C</td>
+</tr>
+</tbody>
+</table>
+<p>A distribuição das síndromes atribuídas pelo modelo na amostra foi:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Síndrome atribuída pela LLM</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">%</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>febril_respiratoria</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">36,7</td>
+</tr>
+<tr class="even">
+<td>febril_gastrointestinal</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">26,7</td>
+</tr>
+<tr class="odd">
+<td>febril_exantematica</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">13,3</td>
+</tr>
+<tr class="even">
+<td>febril_inespecifica</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">10,0</td>
+</tr>
+<tr class="odd">
+<td>febril_neurologica_meningea</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">10,0</td>
+</tr>
+<tr class="even">
+<td>nao_classificado</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3,3</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="interpretação-da-validação" class="level3" data-number="8.12.2">
+<h3 data-number="8.12.2" class="anchored" data-anchor-id="interpretação-da-validação"><span class="header-section-number">8.12.2</span> Interpretação da validação</h3>
+<p>A execução local indicou que a camada LLM está tecnicamente funcional com modelo real executado via Ollama. O resultado mais importante para esta etapa foi a estabilidade da saída estruturada: todos os 30 registros avaliados retornaram JSON válido e puderam ser processados pelo pipeline.</p>
+<p>A análise qualitativa inicial também indicou coerência entre os textos clínicos sintéticos e as síndromes atribuídas. O modelo identificou quadros respiratórios, gastrointestinais, exantemáticos, neurológico-meníngeos, inespecíficos e registros sem evidência suficiente de febre para classificação sindrômica.</p>
+<p>O teste também permitiu observar o custo computacional aproximado da execução local. Para 30 registros, o tempo total foi de aproximadamente 1596 segundos, com tempo médio de 53,2 segundos por registro. Durante a execução, o uso de VRAM aumentou de 72 MB para 5338 MB, e a utilização da GPU chegou a 95%, indicando que a execução local com LLM é viável, mas computacionalmente custosa para uso em escala sem estratégias adicionais de otimização.</p>
+</section>
+<section id="limitações-do-teste" class="level3" data-number="8.12.3">
+<h3 data-number="8.12.3" class="anchored" data-anchor-id="limitações-do-teste"><span class="header-section-number">8.12.3</span> Limitações do teste</h3>
+<p>Esta validação deve ser interpretada como uma prova técnica da arquitetura, não como validação final do classificador. As principais limitações são:</p>
+<ul>
+<li>a amostra avaliada foi pequena;</li>
+<li>os registros utilizados são sintéticos;</li>
+<li>o teste não substitui validação em base real;</li>
+<li>o resultado não substitui revisão por especialistas;</li>
+<li>o tempo médio por registro ainda é elevado para processamento operacional em larga escala;</li>
+<li>a execução depende do ambiente local, da GPU disponível, da versão do Ollama e do nome exato do modelo instalado;</li>
+<li>a camada regex ainda pode gerar falsos positivos em contextos de negação, o que deve ser tratado em etapa posterior de refinamento metodológico.</li>
+</ul>
+<p>Assim, a camada LLM foi considerada tecnicamente funcional para uso exploratório e validação metodológica com modelo local. Para a entrega principal do Quarto Book, entretanto, o modo <code>mock</code> permanece como padrão, garantindo que o projeto possa ser renderizado em qualquer ambiente sem dependências externas.</p>
+</section>
+</section>
+<section id="interpretação" class="level2" data-number="8.13">
+<h2 data-number="8.13" class="anchored" data-anchor-id="interpretação"><span class="header-section-number">8.13</span> Interpretação</h2>
+<p>A camada LLM fornece uma classificação textual independente, útil para comparar a interpretação do modelo com as camadas de CID e regex.</p>
+<p>Nesta versão, ela deve ser lida como uma camada de apoio metodológico, não como decisão final isolada. A decisão final é definida posteriormente a partir da regra hierárquica do pipeline: CIDs específicos permanecem soberanos, enquanto CIDs genéricos ou pouco informativos podem ser refinados pelas camadas textuais quando houver evidência clínica suficiente.</p>
+</section>
+<section id="persistência" class="level2" data-number="8.14">
+<h2 data-number="8.14" class="anchored" data-anchor-id="persistência"><span class="header-section-number">8.14</span> Persistência</h2>
+<p>Os resultados foram gravados em:</p>
+<pre class="text"><code>tb_classificacao_llm</code></pre>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">duckdb_counts</span>(con) <span class="sc">|&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Tabelas persistidas no DuckDB após a classificação por LLM"</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Tabelas persistidas no DuckDB após a classificação por LLM</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">tabela</th>
+<th style="text-align: right;">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">tb_atendimentos</td>
+<td style="text-align: right;">700</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tb_classificacao_cid</td>
+<td style="text-align: right;">700</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tb_classificacao_final</td>
+<td style="text-align: right;">700</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tb_classificacao_llm</td>
+<td style="text-align: right;">200</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tb_classificacao_regex</td>
+<td style="text-align: right;">700</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tb_comparacao_camadas</td>
+<td style="text-align: right;">700</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tb_execucoes</td>
+<td style="text-align: right;">157</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con, <span class="at">shutdown =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./06-classificacao-regex.html" class="pagination-link" aria-label="Classificação por regex">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Classificação por regex</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./08-comparacao-cid-regex-llm.html" class="pagination-link" aria-label="Comparação CID × regex × LLM">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Comparação CID × regex × LLM</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

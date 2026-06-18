@@ -1,0 +1,100 @@
+/* Estilo institucional para o Quarto Book */
+
+:root {
+  --brand-primary: #123C4A;
+  --brand-secondary: #1B6B7A;
+  --brand-accent: #D8A24A;
+  --brand-soft: #F5F8FA;
+  --text-main: #1E2933;
+  --text-muted: #65727D;
+  --card-border: #E4EAF0;
+}
+
+body {
+  color: var(--text-main);
+  background: #FAFBFC;
+}
+
+.navbar {
+  background-color: var(--brand-primary);
+}
+
+.sidebar-title {
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+h1, h2, h3 {
+  color: var(--brand-primary);
+  letter-spacing: -0.02em;
+}
+
+h1.title {
+  font-weight: 800;
+}
+
+.subtitle {
+  color: var(--text-muted);
+}
+
+.callout-note {
+  border-left-color: var(--brand-secondary);
+}
+
+.callout-important {
+  border-left-color: var(--brand-accent);
+}
+
+.syndrome-card {
+  background: white;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem;
+  margin: 1rem 0;
+  box-shadow: 0 8px 22px rgba(18, 60, 74, 0.06);
+}
+
+.syndrome-card h3 {
+  margin-top: 0;
+  margin-bottom: .35rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: .25rem .55rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 700;
+  margin-right: .35rem;
+}
+
+.badge-cid {
+  background: #E8F1F4;
+  color: #123C4A;
+}
+
+.badge-regex {
+  background: #F4EBDD;
+  color: #805B16;
+}
+
+.badge-llm {
+  background: #E8F4EF;
+  color: #145A3C;
+}
+
+.step-box {
+  background: var(--brand-soft);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  margin: .9rem 0;
+}
+
+.table {
+  font-size: .92rem;
+}
+
+code {
+  color: #0F4C5C;
+}

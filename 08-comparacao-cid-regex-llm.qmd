@@ -1,0 +1,284 @@
+---
+title: "Comparação CID × regex × LLM"
+---
+
+```{r}
+#| label: setup-comparacao
+#| message: false
+#| warning: false
+
+source("R/00_pacotes.R")
+source("R/04_duckdb.R")
+source("R/09_comparacao_camadas.R")
+```
+
+## Objetivo da comparação
+
+Este capítulo compara as três camadas de classificação sindrômica já executadas no pipeline:
+
+```text
+CID
+regex
+LLM
+```
+
+A finalidade desta etapa ainda não é definir a classificação final do atendimento. O objetivo é produzir uma leitura auditável sobre convergências, divergências e lacunas entre as fontes de classificação.
+
+A comparação é útil para responder perguntas operacionais e metodológicas, como:
+
+- em quantos atendimentos as três camadas concordam;
+- em quais situações o CID classifica, mas o texto não sustenta a mesma síndrome;
+- em quais situações regex e LLM concordam apesar de CID ausente ou genérico;
+- quais registros devem ser priorizados para auditoria manual;
+- onde estão os principais padrões de discordância.
+
+## Princípio metodológico
+
+A comparação respeita o desenho geral do pipeline:
+
+```text
+CID = camada estruturada
+regex = camada textual explícita
+LLM = camada textual interpretativa
+```
+
+O CID permanece soberano para a etapa posterior de classificação final quando for informativo. Ainda assim, nesta etapa, todas as camadas são mantidas lado a lado para fins de auditoria, validação metodológica e análise de divergência.
+
+Assim, uma divergência entre CID e LLM não significa necessariamente erro. Ela pode indicar:
+
+- CID inespecífico ou pouco informativo;
+- texto clínico incompleto;
+- hipótese diagnóstica registrada em CID, mas não descrita no texto;
+- sinais textuais capturados pela LLM, mas não pelo CID;
+- limitação da regex;
+- erro ou instabilidade da saída LLM.
+
+## Leitura das bases persistidas
+
+```{r}
+#| label: ler-bases-comparacao
+
+con <- connect_duckdb()
+init_duckdb_schema(con)
+
+atendimentos <- read_atendimentos(con)
+classificacao_cid <- read_classificacao_cid(con)
+classificacao_regex <- read_classificacao_regex(con)
+classificacao_llm <- read_classificacao_llm(con)
+
+list(
+  atendimentos = nrow(atendimentos),
+  classificacao_cid = nrow(classificacao_cid),
+  classificacao_regex = nrow(classificacao_regex),
+  classificacao_llm = nrow(classificacao_llm)
+)
+```
+
+## Construção da base comparativa
+
+A base comparativa reúne, para cada atendimento, a síndrome atribuída por cada camada e indicadores de disponibilidade, concordância e divergência.
+
+```{r}
+#| label: construir-comparacao
+
+comparacao_camadas <- comparar_camadas_classificacao(
+  atendimentos = atendimentos,
+  classificacao_cid = classificacao_cid,
+  classificacao_regex = classificacao_regex,
+  classificacao_llm = classificacao_llm
+)
+
+knitr::kable(
+  comparacao_camadas |>
+    dplyr::select(
+      record_id,
+      dplyr::any_of(c("cid", "cid_nome")),
+      sindrome_cid,
+      sindrome_regex,
+      sindrome_llm,
+      n_camadas_classificaram,
+      padrao_comparacao
+    ) |>
+    dplyr::slice_head(n = 12),
+  caption = "Exemplo da base comparativa CID × regex × LLM"
+)
+```
+
+## Padrões de convergência e divergência
+
+A tabela a seguir resume os principais padrões encontrados entre as três camadas.
+
+```{r}
+#| label: tabela-padroes-comparacao
+
+resumo_padroes <- summarise_comparacao_camadas(comparacao_camadas)
+
+knitr::kable(
+  resumo_padroes,
+  caption = "Padrões de comparação entre CID, regex e LLM"
+)
+```
+
+```{r}
+#| label: grafico-padroes-comparacao
+#| fig-cap: "Padrões de convergência e divergência entre CID, regex e LLM."
+
+plot_padroes_comparacao(comparacao_camadas)
+```
+
+## Disponibilidade das camadas
+
+Nem todas as camadas classificam todos os atendimentos. Em especial, a camada CID depende de um código informativo; a regex depende da presença textual explícita de febre e sintomas; e a LLM pode retornar `nao_classificado` quando o texto não sustenta uma síndrome febril.
+
+```{r}
+#| label: disponibilidade-camadas
+
+knitr::kable(
+  summarise_camadas_disponiveis(comparacao_camadas),
+  caption = "Disponibilidade de classificação por camada"
+)
+```
+
+## Concordância par a par
+
+A concordância par a par é calculada apenas entre registros comparáveis, isto é, registros nos quais as duas camadas em questão produziram uma classificação válida.
+
+```{r}
+#| label: tabela-concordancia-par-a-par
+
+concordancia_par_a_par <- summarise_concordancia_par_a_par(comparacao_camadas)
+
+knitr::kable(
+  concordancia_par_a_par,
+  caption = "Concordância entre camadas, considerando apenas registros comparáveis"
+)
+```
+
+```{r}
+#| label: grafico-concordancia-par-a-par
+#| fig-cap: "Percentual de concordância entre camadas nos registros comparáveis."
+
+plot_concordancia_par_a_par(comparacao_camadas)
+```
+
+## Matriz CID × LLM
+
+A matriz abaixo permite observar como a camada LLM se distribui dentro de cada classificação por CID. Essa análise é especialmente útil para identificar síndromes em que o texto clínico frequentemente não acompanha a hipótese codificada.
+
+```{r}
+#| label: matriz-cid-llm
+
+matriz_cid_llm <- summarise_matriz_cid_llm(comparacao_camadas)
+
+knitr::kable(
+  matriz_cid_llm |>
+    dplyr::slice_head(n = 30),
+  caption = "Matriz de comparação CID × LLM"
+)
+```
+
+## Matriz regex × LLM
+
+A comparação entre regex e LLM é uma comparação entre duas leituras textuais. A regex captura padrões explícitos; a LLM interpreta o texto de forma mais flexível, mas também pode ser mais sensível a ambiguidades.
+
+```{r}
+#| label: matriz-regex-llm
+
+matriz_regex_llm <- summarise_matriz_regex_llm(comparacao_camadas)
+
+knitr::kable(
+  matriz_regex_llm |>
+    dplyr::slice_head(n = 30),
+  caption = "Matriz de comparação regex × LLM"
+)
+```
+
+## Divergências prioritárias para auditoria
+
+Para fins de revisão manual, são especialmente importantes os registros com CID informativo em que ao menos uma camada textual aponta outra síndrome, bem como os casos em que regex e LLM divergem entre si.
+
+```{r}
+#| label: resumo-divergencias-auditoria
+
+resumo_divergencias <- tibble::tibble(
+  indicador = c(
+    "Divergência com CID informativo",
+    "Divergência textual regex × LLM",
+    "Três camadas divergentes"
+  ),
+  n = c(
+    sum(comparacao_camadas$divergencia_com_cid_informativo, na.rm = TRUE),
+    sum(comparacao_camadas$divergencia_textual_regex_llm, na.rm = TRUE),
+    sum(comparacao_camadas$padrao_comparacao == "tres_camadas_divergentes", na.rm = TRUE)
+  )
+) |>
+  dplyr::mutate(percentual = round(100 * .data$n / nrow(comparacao_camadas), 1))
+
+knitr::kable(
+  resumo_divergencias,
+  caption = "Indicadores de divergência para auditoria"
+)
+```
+
+```{r}
+#| label: amostra-auditoria-comparacao
+
+amostra_auditoria <- selecionar_amostra_auditoria(
+  comparacao = comparacao_camadas,
+  n = 20
+)
+
+knitr::kable(
+  amostra_auditoria |>
+    dplyr::select(
+      record_id,
+      dplyr::any_of(c("cid", "cid_nome")),
+      sindrome_cid,
+      sindrome_regex,
+      sindrome_llm,
+      padrao_comparacao,
+      divergencia_com_cid_informativo,
+      divergencia_textual_regex_llm,
+      justificativa_llm
+    ),
+  caption = "Amostra de registros para auditoria da comparação entre camadas"
+)
+```
+
+## Persistência da comparação
+
+A base de comparação é persistida no DuckDB para permitir auditoria posterior e uso nos próximos capítulos.
+
+```{r}
+#| label: persistir-comparacao
+
+write_comparacao_camadas(
+  con = con,
+  dados = comparacao_camadas,
+  overwrite = TRUE
+)
+
+write_execution_log(
+  con = con,
+  etapa = "comparacao_cid_regex_llm",
+  n_registros = nrow(comparacao_camadas),
+  observacao = "Comparação entre camadas CID, regex e LLM."
+)
+
+knitr::kable(
+  duckdb_counts(con),
+  caption = "Tabelas persistidas no DuckDB após a comparação entre camadas"
+)
+```
+
+## Interpretação
+
+A comparação entre camadas deve ser interpretada como uma etapa de diagnóstico do pipeline. Registros convergentes indicam maior estabilidade operacional entre fontes distintas de informação. Registros divergentes, por outro lado, não devem ser automaticamente tratados como erro: eles apontam situações que exigem revisão metodológica ou clínica.
+
+Para a próxima etapa, a base `tb_comparacao_camadas` servirá de entrada para a classificação final. Nessa etapa posterior, a regra já definida será aplicada: quando o CID for informativo, ele será respeitado; quando estiver ausente ou não informativo, as camadas textuais poderão apoiar a classificação.
+
+```{r}
+#| label: fechar-conexao-comparacao
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```

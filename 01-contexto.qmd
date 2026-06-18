@@ -1,0 +1,22 @@
+# Contexto e objetivo
+
+Campos textuais de prontuários eletrônicos, como queixa principal e anamnese, frequentemente contêm informações clínicas relevantes que não aparecem de forma estruturada nos bancos assistenciais.
+
+Na vigilância epidemiológica, esses textos podem apoiar a identificação precoce de padrões compatíveis com síndromes febris. No entanto, o uso operacional desses dados exige uma metodologia clara, reproduzível e auditável.
+
+## Objetivo geral
+
+Propor um fluxo de classificação sindrômica de atendimentos febris utilizando:
+
+1. **CID**, como camada soberana quando presente e informativa;
+2. **regex**, como camada explícita e rastreável de identificação de sintomas;
+3. **LLM**, como segunda opinião contextual para interpretar a anamnese.
+
+## Princípios do fluxo
+
+- A classificação é sindrômica, não etiológica.
+- Cada atendimento recebe apenas uma síndrome principal.
+- A febre é condição necessária para classificação sindrômica febril, exceto quando a classificação for determinada por CID soberano.
+- Negações explícitas, como “nega febre” ou “afebril”, devem ser detectadas.
+- O LLM não calcula confiança nesta versão.
+- O resultado registra convergência ou divergência entre regex e LLM.

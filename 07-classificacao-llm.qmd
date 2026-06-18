@@ -1,0 +1,489 @@
+---
+title: "Classificação por LLM"
+---
+
+```{r}
+#| label: setup-llm
+#| message: false
+#| warning: false
+
+source("R/00_pacotes.R")
+source("R/04_duckdb.R")
+source("R/07_llm_clients.R")
+source("R/08_llm_classification.R")
+```
+
+## Objetivo da camada LLM
+
+A terceira camada do pipeline utiliza um modelo de linguagem para interpretar o texto clínico e atribuir uma síndrome febril principal.
+
+Diferentemente da camada de CID, que utiliza códigos diagnósticos estruturados, e da camada regex, que utiliza padrões textuais explícitos, a camada LLM busca capturar uma interpretação clínica resumida do atendimento a partir da queixa e da anamnese.
+
+Nesta primeira versão, a LLM tem papel **interpretativo e comparativo**. Ela não substitui automaticamente o CID. Sua principal função é produzir uma leitura textual independente para comparação com CID e regex, apoiar auditoria e permitir refinamento quando a codificação estruturada for genérica ou pouco informativa.
+
+## Desenho metodológico
+
+A camada LLM foi desenhada com três princípios:
+
+1. **Independência do CID e da regex**  
+   A LLM classifica apenas o texto clínico.
+
+2. **Saída estruturada e auditável**  
+   O modelo deve retornar JSON válido, sem texto livre fora do objeto JSON.
+
+3. **Desacoplamento do provedor**  
+   O pipeline pode funcionar com modo simulado, modelo local ou API externa.
+
+A arquitetura implementada é:
+
+```text
+texto clínico
+↓
+prompt sindrômico
+↓
+cliente LLM
+     ├── mock
+     ├── ollama
+     ├── gemini
+     └── openai_compatible
+↓
+JSON estruturado
+↓
+validação
+↓
+tb_classificacao_llm
+```
+
+## Provedores disponíveis
+
+A função `llm_generate()` atua como uma interface única para diferentes provedores.
+
+Nesta etapa, o modo padrão é `mock`. Isso permite que o Quarto Book continue renderizando integralmente mesmo sem internet, sem chave de API e sem modelo local instalado.
+
+Em uso operacional, a configuração pode ser alterada por variáveis de ambiente, sem modificar a lógica do pipeline.
+
+Exemplo com Ollama local:
+
+```r
+Sys.setenv(
+  LLM_PROVIDER = "ollama",
+  LLM_MODEL = "qwen3.5:latest",
+  LLM_BASE_URL = "http://localhost:11434",
+  LLM_JSON_MODE = "true",
+  LLM_TIMEOUT_SEC = "180",
+  LLM_MAX_RECORDS = "30"
+)
+```
+
+O nome do modelo deve corresponder exatamente ao nome listado por:
+
+```bash
+ollama list
+```
+
+Exemplo com Gemini:
+
+```text
+LLM_PROVIDER=gemini
+LLM_MODEL=gemini-1.5-flash
+LLM_API_KEY=sua_chave_aqui
+```
+
+Exemplo com API OpenAI-compatible:
+
+```text
+LLM_PROVIDER=openai_compatible
+LLM_MODEL=nome_do_modelo
+LLM_BASE_URL=https://api.exemplo.com/v1
+LLM_API_KEY=sua_chave_aqui
+```
+
+```{r}
+#| label: llm-config
+
+usar_llm_real_no_render <- tolower(
+  Sys.getenv("RUN_REAL_LLM_IN_RENDER", unset = "false")
+) %in% c("true", "1", "yes", "sim")
+
+if (!usar_llm_real_no_render) {
+  Sys.setenv(
+    LLM_PROVIDER = "mock",
+    LLM_MODEL = "mock-sindromico-v1",
+    LLM_BASE_URL = "",
+    LLM_JSON_MODE = "true",
+    LLM_TIMEOUT_SEC = "120"
+  )
+}
+
+llm_config <- make_llm_config()
+
+max_records_llm <- as.integer(
+  Sys.getenv("LLM_MAX_RECORDS", unset = "200")
+)
+
+valor_config <- function(x) {
+  if (is.null(x) || length(x) == 0) {
+    return(NA_character_)
+  }
+
+  if (length(x) == 1 && is.na(x)) {
+    return(NA_character_)
+  }
+
+  as.character(x[[1]])
+}
+
+config_tbl <- list(
+  provider = valor_config(llm_config$provider),
+  model = valor_config(llm_config$model),
+  base_url = valor_config(llm_config$base_url),
+  temperature = valor_config(llm_config$temperature),
+  max_tokens = valor_config(llm_config$max_tokens),
+  timeout_sec = valor_config(llm_config$timeout_sec),
+  json_mode = valor_config(llm_config$json_mode),
+  max_records = valor_config(max_records_llm)
+) |>
+  tibble::enframe(
+    name = "parametro",
+    value = "valor"
+  )
+
+knitr::kable(
+  config_tbl,
+  caption = "Configuração ativa da camada LLM"
+)
+```
+
+## Saída esperada
+
+O LLM deve retornar exclusivamente um JSON com os seguintes campos:
+
+```json
+{
+  "sindrome_principal_llm": "febril_respiratoria",
+  "febre_presente": true,
+  "febre_negada": false,
+  "sintomas_identificados": ["febre", "tosse", "coriza"],
+  "justificativa_llm": "Texto menciona febre, tosse e coriza, compatível com síndrome febril respiratória."
+}
+```
+
+Não é utilizada confiança numérica. A justificativa curta serve para auditoria técnica e revisão por especialistas.
+
+## Prompt utilizado
+
+O prompt abaixo é o texto enviado ao modelo para cada atendimento. Ele instrui a LLM a usar apenas o texto clínico, restringe as categorias permitidas e exige uma resposta em JSON válido.
+
+::: {.callout-note collapse="true"}
+## Prompt completo usado pela camada LLM
+
+```{r}
+#| label: prompt-utilizado
+#| echo: false
+
+exemplo_texto <- "Paciente com febre há dois dias, tosse seca, coriza e dor de garganta. Nega falta de ar."
+
+prompt_exemplo <- build_llm_syndrome_prompt(exemplo_texto)
+
+cat(prompt_exemplo)
+```
+:::
+
+## Exemplo de resposta estruturada
+
+O exemplo abaixo executa a camada LLM sobre um texto clínico simples. No modo `mock`, a resposta é simulada; em `ollama`, `gemini` ou `openai_compatible`, o mesmo código chama o provedor configurado.
+
+```{r}
+#| label: exemplo-resposta-llm
+
+exemplo_classificacao <- classify_one_by_llm(
+  record_id = "exemplo_001",
+  texto_clinico = exemplo_texto,
+  config = llm_config
+)
+
+exemplo_classificacao |>
+  dplyr::select(
+    sindrome_principal_llm,
+    febre_presente,
+    febre_negada,
+    sintomas_identificados,
+    justificativa_llm,
+    parse_ok,
+    provider_llm,
+    modelo_llm
+  ) |>
+  knitr::kable(
+    caption = "Exemplo de resposta estruturada produzida pela camada LLM"
+  )
+```
+
+## Execução na base sintética
+
+A classificação é executada sobre a tabela de atendimentos previamente gravada no DuckDB.
+
+```{r}
+#| label: ler-atendimentos-llm
+
+con <- connect_duckdb()
+init_duckdb_schema(con)
+
+atendimentos <- read_atendimentos(con)
+
+dplyr::glimpse(atendimentos)
+```
+
+Para manter a renderização rápida no modo demonstrativo, o capítulo usa uma amostra da base. Em produção, a variável `LLM_MAX_RECORDS` pode ser ajustada ou removida da lógica de execução.
+
+```{r}
+#| label: executar-classificacao-llm
+#| message: false
+#| warning: false
+
+classificacao_llm <- classify_by_llm(
+  dados = atendimentos,
+  config = llm_config,
+  max_records = max_records_llm
+)
+
+write_classificacao_llm(
+  con = con,
+  dados = classificacao_llm,
+  overwrite = TRUE
+)
+
+write_execution_log(
+  con = con,
+  etapa = "classificacao_llm",
+  n_registros = nrow(classificacao_llm),
+  observacao = paste(
+    "Provider:", llm_config$provider,
+    "| Modelo:", llm_config$model,
+    "| JSON mode:", valor_config(llm_config$json_mode),
+    "| Max records:", max_records_llm
+  )
+)
+
+classificacao_llm |>
+  dplyr::slice_head(n = 5) |>
+  dplyr::select(
+    record_id,
+    sindrome_principal_llm,
+    febre_presente,
+    febre_negada,
+    sintomas_identificados,
+    justificativa_llm,
+    parse_ok
+  ) |>
+  knitr::kable(
+    caption = "Primeiros registros classificados pela camada LLM"
+  )
+```
+
+## Resumo da classificação por LLM
+
+```{r}
+#| label: resumo-llm
+
+resumo_llm <- summarise_llm_classification(classificacao_llm)
+
+resumo_llm |>
+  dplyr::mutate(prop = scales::percent(prop, accuracy = 0.1)) |>
+  knitr::kable(
+    caption = "Distribuição da classificação por LLM"
+  )
+```
+
+```{r}
+#| label: grafico-distribuicao-llm
+#| fig-width: 8
+#| fig-height: 5
+#| fig-cap: "Distribuição das síndromes atribuídas pela camada LLM."
+
+plot_llm_syndrome_distribution(classificacao_llm)
+```
+
+## Qualidade da resposta estruturada
+
+O campo `parse_ok` indica se a resposta foi interpretada como JSON válido e transformada no esquema esperado.
+
+```{r}
+#| label: parse-ok-llm
+
+classificacao_llm |>
+  dplyr::count(parse_ok) |>
+  dplyr::mutate(prop = scales::percent(n / sum(n), accuracy = 0.1)) |>
+  knitr::kable(
+    caption = "Qualidade do parse da resposta LLM"
+  )
+```
+
+No modo `mock`, espera-se que `parse_ok` seja verdadeiro para todos os registros. Em provedores reais, esse indicador será importante para monitorar falhas de formatação, instabilidade de resposta ou necessidade de ajuste do prompt.
+
+## Amostra para auditoria
+
+A amostra abaixo permite revisar, caso a caso, o texto clínico original, a classificação atribuída pela LLM, os sintomas extraídos e a justificativa retornada.
+
+```{r}
+#| label: amostra-auditoria-llm
+
+amostra_auditoria_llm <- sample_llm_audit(
+  dados = atendimentos,
+  classificacao_llm = classificacao_llm,
+  n = 10
+)
+
+amostra_auditoria_llm |>
+  dplyr::select(
+    record_id,
+    cid,
+    texto_clinico,
+    sindrome_principal_llm,
+    febre_presente,
+    febre_negada,
+    sintomas_identificados,
+    justificativa_llm
+  ) |>
+  knitr::kable(
+    caption = "Amostra para auditoria da classificação por LLM"
+  )
+```
+
+## Uso com LLM local
+
+Para usar um modelo local via Ollama, não é necessário alterar a lógica do pipeline. Basta definir as variáveis de ambiente antes da execução.
+
+Exemplo:
+
+```r
+Sys.setenv(
+  LLM_PROVIDER = "ollama",
+  LLM_MODEL = "qwen3.5:latest",
+  LLM_BASE_URL = "http://localhost:11434",
+  LLM_JSON_MODE = "true",
+  LLM_TIMEOUT_SEC = "180",
+  LLM_MAX_RECORDS = "30"
+)
+
+quarto::quarto_render()
+```
+
+Para verificar o nome correto do modelo instalado:
+
+```bash
+ollama list
+```
+
+Para fins de reprodutibilidade, o Quarto Book utiliza `mock` como padrão. Em uso operacional ou em validação técnica, o mesmo capítulo pode ser executado com `ollama`, `gemini` ou `openai_compatible`, mantendo a mesma interface de classificação.
+
+## Validação local com Ollama/Qwen
+
+Além do modo `mock`, utilizado por padrão para garantir reprodutibilidade, a camada LLM foi testada localmente com um modelo Qwen executado via Ollama.
+
+O objetivo deste teste foi verificar se a arquitetura da camada LLM consegue substituir a resposta simulada por uma chamada real a um modelo local, mantendo a mesma interface de entrada e saída do pipeline. Dessa forma, a função da validação não foi medir desempenho classificatório definitivo, mas confirmar a viabilidade técnica da camada LLM em um ambiente real.
+
+A execução foi realizada em ambiente local com GPU NVIDIA GeForce RTX 4060 Laptop GPU, com aproximadamente 8 GB de VRAM. O modelo foi chamado via endpoint local do Ollama.
+
+A configuração utilizada foi:
+
+```r
+Sys.setenv(
+  LLM_PROVIDER = "ollama",
+  LLM_MODEL = "qwen3.5:latest",
+  LLM_BASE_URL = "http://localhost:11434",
+  LLM_JSON_MODE = "false",
+  LLM_TIMEOUT_SEC = "180",
+  LLM_MAX_RECORDS = "30"
+)
+```
+
+Para esse modelo local, optou-se por `LLM_JSON_MODE=false`. Nessa configuração, o Ollama retorna o conteúdo principal no campo `response`, e o parser do pipeline extrai e valida o objeto JSON retornado pelo modelo. Essa estratégia foi mais estável no teste local do que forçar `format = "json"` diretamente na chamada ao Ollama.
+
+### Métricas da execução local
+
+O teste foi realizado com uma amostra controlada de 30 registros sintéticos. O modelo retornou respostas estruturadas em JSON válido para todos os registros avaliados.
+
+| Métrica                               |                              Valor |
+| ------------------------------------- | ---------------------------------: |
+| Data da execução                      |                2026-06-17 23:14:14 |
+| Provider                              |                             ollama |
+| Modelo                                |                     qwen3.5:latest |
+| Endpoint                              |             http://localhost:11434 |
+| JSON mode                             |                              false |
+| Timeout configurado                   |                              180 s |
+| Registros processados                 |                                 30 |
+| Respostas com JSON válido             |                                 30 |
+| Falhas de parse                       |                                  0 |
+| Proporção de `parse_ok`               |                               100% |
+| Tempo total de execução               |                             1596 s |
+| Tempo médio por registro              |                             53,2 s |
+| GPU                                   | NVIDIA GeForce RTX 4060 Laptop GPU |
+| VRAM total                            |                            8188 MB |
+| VRAM usada antes da execução          |                              72 MB |
+| VRAM usada depois da execução         |                            5338 MB |
+| Utilização da GPU antes da execução   |                                 0% |
+| Utilização da GPU depois da execução  |                                95% |
+| Temperatura da GPU antes da execução  |                              37 °C |
+| Temperatura da GPU depois da execução |                              61 °C |
+
+A distribuição das síndromes atribuídas pelo modelo na amostra foi:
+
+| Síndrome atribuída pela LLM |  n |    % |
+| --------------------------- | -: | ---: |
+| febril_respiratoria         | 11 | 36,7 |
+| febril_gastrointestinal     |  8 | 26,7 |
+| febril_exantematica         |  4 | 13,3 |
+| febril_inespecifica         |  3 | 10,0 |
+| febril_neurologica_meningea |  3 | 10,0 |
+| nao_classificado            |  1 |  3,3 |
+
+### Interpretação da validação
+
+A execução local indicou que a camada LLM está tecnicamente funcional com modelo real executado via Ollama. O resultado mais importante para esta etapa foi a estabilidade da saída estruturada: todos os 30 registros avaliados retornaram JSON válido e puderam ser processados pelo pipeline.
+
+A análise qualitativa inicial também indicou coerência entre os textos clínicos sintéticos e as síndromes atribuídas. O modelo identificou quadros respiratórios, gastrointestinais, exantemáticos, neurológico-meníngeos, inespecíficos e registros sem evidência suficiente de febre para classificação sindrômica.
+
+O teste também permitiu observar o custo computacional aproximado da execução local. Para 30 registros, o tempo total foi de aproximadamente 1596 segundos, com tempo médio de 53,2 segundos por registro. Durante a execução, o uso de VRAM aumentou de 72 MB para 5338 MB, e a utilização da GPU chegou a 95%, indicando que a execução local com LLM é viável, mas computacionalmente custosa para uso em escala sem estratégias adicionais de otimização.
+
+### Limitações do teste
+
+Esta validação deve ser interpretada como uma prova técnica da arquitetura, não como validação final do classificador. As principais limitações são:
+
+* a amostra avaliada foi pequena;
+* os registros utilizados são sintéticos;
+* o teste não substitui validação em base real;
+* o resultado não substitui revisão por especialistas;
+* o tempo médio por registro ainda é elevado para processamento operacional em larga escala;
+* a execução depende do ambiente local, da GPU disponível, da versão do Ollama e do nome exato do modelo instalado;
+* a camada regex ainda pode gerar falsos positivos em contextos de negação, o que deve ser tratado em etapa posterior de refinamento metodológico.
+
+Assim, a camada LLM foi considerada tecnicamente funcional para uso exploratório e validação metodológica com modelo local. Para a entrega principal do Quarto Book, entretanto, o modo `mock` permanece como padrão, garantindo que o projeto possa ser renderizado em qualquer ambiente sem dependências externas.
+
+
+
+
+
+## Interpretação
+
+A camada LLM fornece uma classificação textual independente, útil para comparar a interpretação do modelo com as camadas de CID e regex.
+
+Nesta versão, ela deve ser lida como uma camada de apoio metodológico, não como decisão final isolada. A decisão final é definida posteriormente a partir da regra hierárquica do pipeline: CIDs específicos permanecem soberanos, enquanto CIDs genéricos ou pouco informativos podem ser refinados pelas camadas textuais quando houver evidência clínica suficiente.
+
+## Persistência
+
+Os resultados foram gravados em:
+
+```text
+tb_classificacao_llm
+```
+
+```{r}
+#| label: duckdb-counts-llm
+
+duckdb_counts(con) |>
+  knitr::kable(
+    caption = "Tabelas persistidas no DuckDB após a classificação por LLM"
+  )
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```

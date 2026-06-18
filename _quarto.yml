@@ -1,0 +1,30 @@
+project:
+  type: book
+
+book:
+  title: "Vigilância Sindrômica de Síndromes Febris"
+  chapters:
+    - index.qmd
+    - 01-contexto.qmd
+    - 02-definicao-sindromes.qmd
+    - 03-arquitetura-classificacao.qmd
+    - 04-preparacao-dados.qmd
+    - 05-classificacao-cid.qmd
+    - 06-classificacao-regex.qmd
+    - 07-classificacao-llm.qmd
+    - 08-comparacao-cid-regex-llm.qmd
+    - 09-classificacao-final.qmd
+    - 10-series-historicas.qmd
+    - 11-auditoria-limitacoes.qmd
+    - 12-proximos-passos-produto.qmd
+
+
+
+format:
+  html:
+    theme: cosmo
+    css: assets/styles.css
+    toc: true
+    number-sections: true
+    code-fold: true
+    code-summary: "Ver código"

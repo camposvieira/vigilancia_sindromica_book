@@ -1,0 +1,366 @@
+---
+title: "Próximos passos e fechamento da entrega"
+---
+
+```{r}
+#| label: setup-produto-entrega
+#| message: false
+#| warning: false
+
+source("R/00_pacotes.R")
+source("R/04_duckdb.R")
+source("R/13_produto_entrega.R")
+```
+
+## Objetivo deste capítulo
+
+Este capítulo consolida o Quarto Book como uma entrega metodológica e executável. O pipeline desenvolvido demonstra como combinar CID, regras textuais e LLM para classificar atendimentos em síndromes febris, mantendo rastreabilidade das decisões e condições explícitas de auditoria.
+
+O material foi construído com base sintética, pois a base real ainda não foi incorporada. Mesmo assim, a arquitetura já está organizada para ser adaptada para dados reais, execução operacional e futura transformação em aplicativo Shiny.
+
+## Estado atual da entrega
+
+```{r}
+#| label: tabela-entregaveis-produto
+
+knitr::kable(
+  summarise_entregaveis_produto(),
+  caption = "Componentes já implementados no produto demonstrativo"
+)
+```
+
+A entrega atual inclui três características importantes:
+
+1. **Relatório metodológico executável**, com capítulos explicativos, código reprodutível, gráficos e tabelas.
+2. **Pipeline persistente**, com gravação das etapas intermediárias e finais em DuckDB.
+3. **Arquitetura flexível de LLM**, permitindo uso em modo `mock`, Ollama local, Gemini ou API OpenAI-compatible.
+
+## Tabelas persistidas
+
+```{r}
+#| label: tabelas-persistidas-produto
+
+con <- connect_duckdb()
+init_duckdb_schema(con)
+
+knitr::kable(
+  summarise_tabelas_produto(con),
+  caption = "Tabelas disponíveis no DuckDB local"
+)
+```
+
+Essas tabelas permitem auditar o pipeline em diferentes níveis. A classificação final depende da comparação entre camadas, mas as classificações por CID, regex e LLM continuam preservadas para revisão.
+
+## Como adaptar para a base real
+
+A primeira etapa de adaptação para dados reais é substituir a base sintética por uma tabela ou arquivo com os campos mínimos necessários.
+
+```{r}
+#| label: tabela-campos-minimos-real
+
+knitr::kable(
+  summarise_campos_minimos_base_real(),
+  caption = "Campos mínimos recomendados para adaptação à base real"
+)
+```
+
+Na prática, o campo mais importante para as camadas textuais é `texto_clinico`. Ele pode ser criado pela combinação de campos como queixa principal, anamnese, evolução, observação clínica e motivo do atendimento.
+
+Exemplo conceitual:
+
+```text
+texto_clinico = queixa + anamnese + evolução + observação
+```
+
+O pipeline não exige que a base real tenha exatamente os mesmos nomes de coluna da base sintética. O ponto central é que a etapa de normalização converta a entrada para o schema interno usado pelo projeto.
+
+## Configuração da camada LLM
+
+A camada LLM foi desenhada para funcionar em modo mock, Ollama local, Gemini e APIs OpenAI-compatible. Para fins de reprodutibilidade da entrega, o Quarto Book renderiza por padrão em modo mock. Testes locais com Ollama podem ser executados alterando LLM_PROVIDER=ollama e LLM_MODEL conforme o modelo disponível na máquina.
+
+```text
+LLM_PROVIDER=mock
+LLM_MODEL=mock-sindromico-v1
+```
+
+Para uso local com Ollama:
+
+```text
+LLM_PROVIDER=ollama
+LLM_MODEL=mistral:latest
+LLM_BASE_URL=http://localhost:11434
+```
+
+Para uso com Gemini:
+
+```text
+LLM_PROVIDER=gemini
+LLM_MODEL=gemini-1.5-flash
+LLM_API_KEY=sua_chave
+```
+
+Para uso com API OpenAI-compatible:
+
+```text
+LLM_PROVIDER=openai_compatible
+LLM_MODEL=gpt-4o-mini
+LLM_API_KEY=sua_chave
+LLM_BASE_URL=https://api.openai.com/v1
+```
+
+A escolha do provedor deve considerar custo, infraestrutura, privacidade, conectividade, tempo de execução e política institucional de tratamento de dados sensíveis.
+
+## Validação antes do uso operacional
+
+Antes de usar o pipeline em rotina real, recomenda-se uma etapa formal de validação com especialistas.
+
+O processo mínimo recomendado é:
+
+```text
+1. Selecionar amostra estratificada de atendimentos reais.
+2. Rotular manualmente a síndrome principal por especialistas.
+3. Comparar CID, regex, LLM e classificação final contra o padrão de referência.
+4. Medir sensibilidade, especificidade, valor preditivo positivo e F1 por síndrome.
+5. Revisar erros sistemáticos de classificação.
+6. Ajustar dicionários, prompts, regras de prioridade e tratamento de CIDs genéricos.
+7. Repetir a avaliação antes da implantação operacional.
+```
+
+A validação deve incluir casos simples, casos ambíguos, CIDs genéricos, textos incompletos, negação de febre e registros com múltiplos sintomas.
+
+## Guia rápido para transformar o pipeline em Shiny
+
+A versão Shiny deve reaproveitar o pipeline atual, e não reescrever a lógica do zero. O Quarto Book funciona como especificação metodológica; o Shiny funcionaria como interface operacional.
+
+```{r}
+#| label: tabela-modulos-shiny
+
+knitr::kable(
+  summarise_modulos_shiny(),
+  caption = "Módulos recomendados para uma versão Shiny do pipeline"
+)
+```
+
+### Estrutura recomendada do app
+
+Uma estrutura simples poderia ser:
+
+```text
+app_sindromes_febris/
+├── app.R
+├── R/
+│   ├── 00_pacotes.R
+│   ├── 01_config_sindromes.R
+│   ├── 02_input_normalization.R
+│   ├── 04_duckdb.R
+│   ├── 05_cid_classification.R
+│   ├── 06_regex_classification.R
+│   ├── 07_llm_clients.R
+│   ├── 08_llm_classification.R
+│   ├── 09_comparacao_camadas.R
+│   ├── 10_classificacao_final.R
+│   └── 11_series_historicas.R
+├── data/
+├── outputs/
+└── www/
+```
+
+Para uma aplicação mais robusta, especialmente se houver múltiplos usuários, login e implantação institucional, recomenda-se usar uma estrutura de pacote Shiny com `golem`.
+
+### Telas mínimas recomendadas
+
+A primeira versão do Shiny pode ter seis telas:
+
+```text
+1. Visão geral
+2. Importação e qualidade da base
+3. Execução do pipeline
+4. Resultados temporais
+5. Auditoria de registros
+6. Configurações
+```
+
+### Tela 1 — Visão geral
+
+Deve apresentar cartões com:
+
+```text
+total de atendimentos
+atendimentos classificados
+percentual não classificado
+número de síndromes detectadas
+registros com revisão manual recomendada
+última execução
+```
+
+A fonte principal pode ser `tb_classificacao_final`, combinada com `tb_execucoes`.
+
+### Tela 2 — Importação e qualidade da base
+
+Deve permitir:
+
+```text
+upload de CSV/Parquet
+pré-visualização da base
+mapeamento de colunas para o schema interno
+validação de campos mínimos
+percentual de textos vazios
+percentual de CID ausente
+distribuição temporal inicial
+```
+
+Nesta tela, o Shiny deve chamar as funções de normalização já existentes no projeto.
+
+### Tela 3 — Execução do pipeline
+
+Deve permitir executar as camadas:
+
+```text
+CID
+regex
+LLM
+comparação
+classificação final
+```
+
+A execução pode ser sequencial, com mensagens de progresso. Para bases grandes, recomenda-se processamento em lotes e gravação incremental no DuckDB.
+
+### Tela 4 — Resultados temporais
+
+Deve reutilizar a lógica do capítulo de séries históricas:
+
+```text
+série diária
+série semanal
+série por síndrome
+ranking de semanas
+ranking de unidades, se disponível
+```
+
+Os gráficos devem ser filtráveis por período, síndrome, unidade e faixa etária.
+
+### Tela 5 — Auditoria de registros
+
+Essa é uma das telas mais importantes. Deve permitir revisar:
+
+```text
+casos com revisão manual recomendada
+casos com CID genérico refinado pelo texto
+divergências CID × regex × LLM
+regex e LLM divergentes
+casos não classificados
+justificativa da LLM
+texto clínico original
+```
+
+A auditoria deve permitir exportar uma amostra para revisão por especialistas.
+
+### Tela 6 — Configurações
+
+Deve permitir configurar:
+
+```text
+provedor LLM
+modelo LLM
+URL base
+modo mock ou real
+número máximo de registros para teste
+parâmetros de execução
+limites de lote
+```
+
+Credenciais e chaves de API não devem ser gravadas no código. Devem ficar em `.Renviron`, variáveis de ambiente, cofre institucional ou mecanismo equivalente.
+
+## Cuidados para implantação operacional
+
+Para uso em ambiente real, recomenda-se observar:
+
+```text
+segurança e privacidade dos dados clínicos
+controle de acesso
+registro de logs de execução
+versionamento de dicionários e prompts
+separação entre ambiente de teste e produção
+monitoramento de falhas da LLM
+rotina de auditoria periódica
+mecanismo de reprocessamento
+backup do DuckDB ou migração para banco institucional
+```
+
+Se os dados clínicos forem sensíveis, o uso de LLM local pode ser preferível. Se uma API externa for usada, é necessário avaliar contrato, política de privacidade, anonimização e autorização institucional.
+
+## GitHub e versionamento
+
+Para publicar o projeto em um repositório GitHub, recomenda-se incluir:
+
+```text
+README.md
+_quarto.yml
+arquivos .qmd
+pasta R/
+pasta assets/
+base sintética em data/
+.Renviron.example
+.gitignore
+run_pipeline.R
+```
+
+Não se deve publicar:
+
+```text
+chaves de API
+base real com dados sensíveis
+arquivos .Renviron
+logs contendo informações pessoais
+outputs de produção com dados identificáveis
+```
+
+A base sintética pode ser versionada, pois permite demonstrar o funcionamento do pipeline sem expor dados reais.
+
+## Próximas evoluções recomendadas
+
+As próximas evoluções podem ser organizadas em três frentes.
+
+### Frente 1 — Validação metodológica
+
+```text
+construção de padrão de referência
+rotulagem independente por especialistas
+medição de desempenho por síndrome
+análise de erros
+revisão de regras e prompts
+```
+
+### Frente 2 — Operacionalização
+
+```text
+automação da ingestão de dados
+execução agendada
+notificações por e-mail
+painel Shiny
+logs e monitoramento
+controle de versão dos resultados
+```
+
+### Frente 3 — Expansão analítica
+
+```text
+novas síndromes
+classificação multi-rótulo, se necessário
+anomalias temporais
+embeddings para vigilância pré-sindrômica
+clusterização semântica
+integração com território e unidade
+```
+
+## Fechamento
+
+O produto atual deve ser entendido como um protótipo metodológico executável, pronto para demonstração e adaptação. Ele já contém as decisões centrais do pipeline, a lógica de persistência, a camada LLM desacoplada, a comparação entre métodos e a classificação final auditável.
+
+A transição para uso operacional depende principalmente de três etapas: incorporação da base real, validação com especialistas e definição do ambiente de execução. A partir disso, o mesmo núcleo do pipeline pode ser reaproveitado em rotina automatizada, painel Shiny ou sistema de alerta.
+
+```{r}
+#| label: fechar-conexao-produto
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```

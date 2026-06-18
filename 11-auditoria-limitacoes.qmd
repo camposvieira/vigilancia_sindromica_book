@@ -1,0 +1,197 @@
+---
+title: "Auditoria e limitações"
+---
+
+```{r}
+#| label: setup-auditoria-limitacoes
+#| message: false
+#| warning: false
+
+source("R/00_pacotes.R")
+source("R/04_duckdb.R")
+source("R/12_auditoria_limitacoes.R")
+```
+
+## Objetivo
+
+Este capítulo apresenta uma leitura crítica do pipeline de classificação sindrômica construído nos capítulos anteriores.
+
+A finalidade não é recalcular a classificação final, mas avaliar sua rastreabilidade, identificar situações que exigem revisão manual e explicitar as limitações metodológicas do uso combinado de CID, regex e LLM em vigilância sindrômica.
+
+Esta etapa é importante porque o produto não deve ser apresentado apenas como um classificador automático. Ele deve ser entendido como uma ferramenta de apoio à vigilância, com regras explícitas, versionáveis e auditáveis.
+
+## Princípios de auditoria
+
+A auditoria do pipeline considera que diferentes fontes de informação podem divergir por motivos legítimos:
+
+```text
+CID = registro estruturado, sujeito a códigos genéricos ou hipótese diagnóstica ampla
+regex = leitura textual explícita, dependente de termos previamente definidos
+LLM = leitura textual interpretativa, dependente de prompt, modelo e qualidade do texto
+classificação final = regra operacional, não diagnóstico etiológico individual
+```
+
+Assim, uma divergência entre camadas não deve ser interpretada automaticamente como erro. Ela indica um ponto que merece revisão metodológica, ajuste de regra ou validação manual.
+
+## Leitura da classificação final
+
+```{r}
+#| label: ler-classificacao-final-auditoria
+
+con <- connect_duckdb()
+init_duckdb_schema(con)
+
+classificacao_final <- read_classificacao_final(con)
+
+list(
+  registros_classificacao_final = nrow(classificacao_final),
+  colunas_classificacao_final = ncol(classificacao_final)
+)
+```
+
+## Construção da base de auditoria
+
+```{r}
+#| label: construir-base-auditoria
+
+base_auditoria <- build_base_auditoria(classificacao_final)
+
+knitr::kable(
+  base_auditoria |>
+    dplyr::select(
+      record_id,
+      dplyr::any_of(c("cid", "cid_nome")),
+      sindrome_cid,
+      sindrome_regex,
+      sindrome_llm,
+      sindrome_final,
+      fonte_classificacao_final,
+      grupo_auditoria
+    ) |>
+    dplyr::slice_head(n = 12),
+  caption = "Exemplo da base de auditoria metodológica"
+)
+```
+
+## Indicadores principais de auditoria
+
+```{r}
+#| label: indicadores-auditoria
+
+indicadores_auditoria <- summarise_indicadores_auditoria(base_auditoria)
+
+knitr::kable(
+  indicadores_auditoria,
+  caption = "Indicadores principais para auditoria do pipeline"
+)
+```
+
+```{r}
+#| label: grafico-indicadores-auditoria
+#| fig-cap: "Indicadores principais de auditoria do pipeline."
+
+plot_indicadores_auditoria(base_auditoria)
+```
+
+## Grupos prioritários de auditoria
+
+A tabela abaixo organiza os registros segundo grupos de auditoria. Esses grupos ajudam a selecionar amostras para revisão manual e a identificar onde a regra operacional pode precisar de ajustes.
+
+```{r}
+#| label: grupos-auditoria
+
+resumo_grupos_auditoria <- summarise_grupos_auditoria(base_auditoria)
+
+knitr::kable(
+  resumo_grupos_auditoria,
+  caption = "Grupos prioritários de auditoria"
+)
+```
+
+```{r}
+#| label: grafico-grupos-auditoria
+#| fig-cap: "Distribuição dos registros por grupo de auditoria metodológica."
+
+plot_grupos_auditoria(base_auditoria)
+```
+
+## Fonte decisória e grupos de auditoria
+
+```{r}
+#| label: fonte-decisoria-auditoria
+
+knitr::kable(
+  summarise_fontes_para_auditoria(base_auditoria) |>
+    dplyr::slice_head(n = 30),
+  caption = "Relação entre fonte da classificação final e grupo de auditoria"
+)
+```
+
+## Amostra sugerida para revisão manual
+
+A amostra abaixo prioriza registros com maior valor metodológico para revisão: falhas de parse da LLM, revisão manual recomendada, divergência entre regex e LLM, divergência entre CID e texto, uso de apenas uma camada textual e refinamento de CID genérico pelo texto clínico.
+
+```{r}
+#| label: amostra-auditoria-metodologica
+
+amostra_auditoria_metodologica <- selecionar_amostra_auditoria_metodologica(
+  base_auditoria = base_auditoria,
+  n = 30
+)
+
+knitr::kable(
+  amostra_auditoria_metodologica,
+  caption = "Amostra priorizada para revisão manual metodológica"
+)
+```
+
+## Limitações metodológicas
+
+A tabela abaixo resume as principais limitações do pipeline e as estratégias de mitigação recomendadas para uma etapa operacional com dados reais.
+
+```{r}
+#| label: tabela-limitacoes-pipeline
+
+knitr::kable(
+  listar_limitacoes_pipeline(),
+  caption = "Limitações metodológicas e estratégias de mitigação"
+)
+```
+
+## Recomendações para validação
+
+Antes de uso operacional contínuo, o pipeline deve ser validado com uma amostra real revisada por especialistas. Essa validação deve medir desempenho por síndrome, e não apenas acurácia global.
+
+```{r}
+#| label: tabela-recomendacoes-validacao
+
+knitr::kable(
+  listar_recomendacoes_validacao(),
+  caption = "Recomendações para validação com base real"
+)
+```
+
+## Interpretação
+
+A auditoria reforça que o pipeline deve ser entendido como uma estrutura de vigilância e priorização, não como diagnóstico clínico individual. A classificação final é útil porque reduz a complexidade dos registros em uma saída operacional única, mas seu valor depende da transparência das regras, da qualidade dos textos e da validação periódica.
+
+A distinção entre CID específico e CID genérico é um ponto central. Códigos genéricos, como febre não especificada ou infecção viral inespecífica, não devem bloquear o aproveitamento de sinais clínicos mais detalhados presentes na queixa ou na anamnese. Por outro lado, quando houver divergência relevante entre CID, regex e LLM, a rastreabilidade da decisão permite selecionar casos para revisão manual.
+
+## Condições para uso operacional
+
+Para transformar este pipeline em rotina operacional, recomenda-se:
+
+- manter versionamento dos dicionários regex, prompts e regras de decisão;
+- registrar modelo LLM, provedor, versão do prompt e data de execução;
+- monitorar falhas de parse e tempo de processamento;
+- revisar periodicamente amostras estratificadas de casos;
+- definir responsáveis pela curadoria das regras;
+- documentar mudanças antes de comparar séries temporais ao longo do tempo.
+
+## Fechamento da conexão
+
+```{r}
+#| label: fechar-conexao-auditoria
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```

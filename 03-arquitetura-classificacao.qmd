@@ -1,0 +1,55 @@
+# Arquitetura inicial de classificação
+
+A classificação será construída em camadas. Cada camada produz sua própria saída, preservando rastreabilidade.
+
+## Etapa 1 — Classificação por CID
+
+A camada CID é soberana. Se o CID estiver presente e mapeado para uma síndrome, a classificação final assume a síndrome correspondente.
+
+```text
+cid -> classificacao_cid
+```
+
+## Etapa 2 — Classificação por regex
+
+A camada regex identifica febre, negação de febre e sintomas associados a cada síndrome.
+
+```text
+texto clínico -> sintomas detectados -> sindrome_principal_regex
+```
+
+## Etapa 3 — Classificação por LLM
+
+O LLM interpreta o texto como uma segunda opinião contextual independente.
+
+```text
+texto clínico + definições sindrômicas -> sindrome_principal_llm + justificativa_llm
+```
+
+## Etapa 4 — Comparação e classificação final
+
+A saída final mantém as três camadas.
+
+```text
+classificacao_cid
+sindrome_principal_regex
+sindrome_principal_llm
+convergencia_regex_llm
+classificacao_final
+fonte_classificacao_final
+justificativa_llm
+```
+
+## Regra decisória inicial
+
+<div class="step-box">
+
+1. Se `classificacao_cid` não for vazia, então `classificacao_final = classificacao_cid`.
+
+2. Se o CID não for informativo e regex e LLM convergirem, então `classificacao_final = sindrome_principal_regex`.
+
+3. Se o CID não for informativo e regex e LLM divergirem, então `classificacao_final = "divergente"` e o caso deve ser revisado.
+
+</div>
+
+Esta regra é propositalmente simples e auditável.

@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>9&nbsp; Comparação CID × regex × LLM – Vigilância Sindrômica de Síndromes Febris</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./09-classificacao-final.html" rel="next">
+<link href="./07-classificacao-llm.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-0e03cfb9dbb0624f7d4637f4d44cdad8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./08-comparacao-cid-regex-llm.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Comparação CID × regex × LLM</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Vigilância Sindrômica de Síndromes Febris</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Apresentação</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-contexto.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Contexto e objetivo</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-definicao-sindromes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Definição operacional das síndromes</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-arquitetura-classificacao.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Arquitetura inicial de classificação</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-preparacao-dados.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Preparação e padronização dos dados</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-classificacao-cid.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Classificação por CID</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-classificacao-regex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Classificação por regex</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-classificacao-llm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Classificação por LLM</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-comparacao-cid-regex-llm.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Comparação CID × regex × LLM</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-classificacao-final.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Classificação final</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-series-historicas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Séries históricas</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-auditoria-limitacoes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Auditoria e limitações</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-proximos-passos-produto.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Próximos passos e fechamento da entrega</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#objetivo-da-comparação" id="toc-objetivo-da-comparação" class="nav-link active" data-scroll-target="#objetivo-da-comparação"><span class="header-section-number">9.1</span> Objetivo da comparação</a></li>
+  <li><a href="#princípio-metodológico" id="toc-princípio-metodológico" class="nav-link" data-scroll-target="#princípio-metodológico"><span class="header-section-number">9.2</span> Princípio metodológico</a></li>
+  <li><a href="#leitura-das-bases-persistidas" id="toc-leitura-das-bases-persistidas" class="nav-link" data-scroll-target="#leitura-das-bases-persistidas"><span class="header-section-number">9.3</span> Leitura das bases persistidas</a></li>
+  <li><a href="#construção-da-base-comparativa" id="toc-construção-da-base-comparativa" class="nav-link" data-scroll-target="#construção-da-base-comparativa"><span class="header-section-number">9.4</span> Construção da base comparativa</a></li>
+  <li><a href="#padrões-de-convergência-e-divergência" id="toc-padrões-de-convergência-e-divergência" class="nav-link" data-scroll-target="#padrões-de-convergência-e-divergência"><span class="header-section-number">9.5</span> Padrões de convergência e divergência</a></li>
+  <li><a href="#disponibilidade-das-camadas" id="toc-disponibilidade-das-camadas" class="nav-link" data-scroll-target="#disponibilidade-das-camadas"><span class="header-section-number">9.6</span> Disponibilidade das camadas</a></li>
+  <li><a href="#concordância-par-a-par" id="toc-concordância-par-a-par" class="nav-link" data-scroll-target="#concordância-par-a-par"><span class="header-section-number">9.7</span> Concordância par a par</a></li>
+  <li><a href="#matriz-cid-llm" id="toc-matriz-cid-llm" class="nav-link" data-scroll-target="#matriz-cid-llm"><span class="header-section-number">9.8</span> Matriz CID × LLM</a></li>
+  <li><a href="#matriz-regex-llm" id="toc-matriz-regex-llm" class="nav-link" data-scroll-target="#matriz-regex-llm"><span class="header-section-number">9.9</span> Matriz regex × LLM</a></li>
+  <li><a href="#divergências-prioritárias-para-auditoria" id="toc-divergências-prioritárias-para-auditoria" class="nav-link" data-scroll-target="#divergências-prioritárias-para-auditoria"><span class="header-section-number">9.10</span> Divergências prioritárias para auditoria</a></li>
+  <li><a href="#persistência-da-comparação" id="toc-persistência-da-comparação" class="nav-link" data-scroll-target="#persistência-da-comparação"><span class="header-section-number">9.11</span> Persistência da comparação</a></li>
+  <li><a href="#interpretação" id="toc-interpretação" class="nav-link" data-scroll-target="#interpretação"><span class="header-section-number">9.12</span> Interpretação</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Comparação CID × regex × LLM</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/00_pacotes.R"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/04_duckdb.R"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/09_comparacao_camadas.R"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<section id="objetivo-da-comparação" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="objetivo-da-comparação"><span class="header-section-number">9.1</span> Objetivo da comparação</h2>
+<p>Este capítulo compara as três camadas de classificação sindrômica já executadas no pipeline:</p>
+<pre class="text"><code>CID
+regex
+LLM</code></pre>
+<p>A finalidade desta etapa ainda não é definir a classificação final do atendimento. O objetivo é produzir uma leitura auditável sobre convergências, divergências e lacunas entre as fontes de classificação.</p>
+<p>A comparação é útil para responder perguntas operacionais e metodológicas, como:</p>
+<ul>
+<li>em quantos atendimentos as três camadas concordam;</li>
+<li>em quais situações o CID classifica, mas o texto não sustenta a mesma síndrome;</li>
+<li>em quais situações regex e LLM concordam apesar de CID ausente ou genérico;</li>
+<li>quais registros devem ser priorizados para auditoria manual;</li>
+<li>onde estão os principais padrões de discordância.</li>
+</ul>
+</section>
+<section id="princípio-metodológico" class="level2" data-number="9.2">
+<h2 data-number="9.2" class="anchored" data-anchor-id="princípio-metodológico"><span class="header-section-number">9.2</span> Princípio metodológico</h2>
+<p>A comparação respeita o desenho geral do pipeline:</p>
+<pre class="text"><code>CID = camada estruturada
+regex = camada textual explícita
+LLM = camada textual interpretativa</code></pre>
+<p>O CID permanece soberano para a etapa posterior de classificação final quando for informativo. Ainda assim, nesta etapa, todas as camadas são mantidas lado a lado para fins de auditoria, validação metodológica e análise de divergência.</p>
+<p>Assim, uma divergência entre CID e LLM não significa necessariamente erro. Ela pode indicar:</p>
+<ul>
+<li>CID inespecífico ou pouco informativo;</li>
+<li>texto clínico incompleto;</li>
+<li>hipótese diagnóstica registrada em CID, mas não descrita no texto;</li>
+<li>sinais textuais capturados pela LLM, mas não pelo CID;</li>
+<li>limitação da regex;</li>
+<li>erro ou instabilidade da saída LLM.</li>
+</ul>
+</section>
+<section id="leitura-das-bases-persistidas" class="level2" data-number="9.3">
+<h2 data-number="9.3" class="anchored" data-anchor-id="leitura-das-bases-persistidas"><span class="header-section-number">9.3</span> Leitura das bases persistidas</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">connect_duckdb</span>()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">init_duckdb_schema</span>(con)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>atendimentos <span class="ot">&lt;-</span> <span class="fu">read_atendimentos</span>(con)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>classificacao_cid <span class="ot">&lt;-</span> <span class="fu">read_classificacao_cid</span>(con)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>classificacao_regex <span class="ot">&lt;-</span> <span class="fu">read_classificacao_regex</span>(con)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>classificacao_llm <span class="ot">&lt;-</span> <span class="fu">read_classificacao_llm</span>(con)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">atendimentos =</span> <span class="fu">nrow</span>(atendimentos),</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">classificacao_cid =</span> <span class="fu">nrow</span>(classificacao_cid),</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">classificacao_regex =</span> <span class="fu">nrow</span>(classificacao_regex),</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">classificacao_llm =</span> <span class="fu">nrow</span>(classificacao_llm)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$atendimentos
+[1] 700
+
+$classificacao_cid
+[1] 700
+
+$classificacao_regex
+[1] 700
+
+$classificacao_llm
+[1] 200</code></pre>
+</div>
+</div>
+</section>
+<section id="construção-da-base-comparativa" class="level2" data-number="9.4">
+<h2 data-number="9.4" class="anchored" data-anchor-id="construção-da-base-comparativa"><span class="header-section-number">9.4</span> Construção da base comparativa</h2>
+<p>A base comparativa reúne, para cada atendimento, a síndrome atribuída por cada camada e indicadores de disponibilidade, concordância e divergência.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>comparacao_camadas <span class="ot">&lt;-</span> <span class="fu">comparar_camadas_classificacao</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">atendimentos =</span> atendimentos,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">classificacao_cid =</span> classificacao_cid,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">classificacao_regex =</span> classificacao_regex,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">classificacao_llm =</span> classificacao_llm</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  comparacao_camadas <span class="sc">|&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      record_id,</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">any_of</span>(<span class="fu">c</span>(<span class="st">"cid"</span>, <span class="st">"cid_nome"</span>)),</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>      sindrome_cid,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>      sindrome_regex,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>      sindrome_llm,</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>      n_camadas_classificaram,</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>      padrao_comparacao</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">12</span>),</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Exemplo da base comparativa CID × regex × LLM"</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Exemplo da base comparativa CID × regex × LLM</caption>
+<colgroup>
+<col style="width: 4%">
+<col style="width: 1%">
+<col style="width: 28%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 11%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">record_id</th>
+<th style="text-align: left;">cid</th>
+<th style="text-align: left;">cid_nome</th>
+<th style="text-align: left;">sindrome_cid</th>
+<th style="text-align: left;">sindrome_regex</th>
+<th style="text-align: left;">sindrome_llm</th>
+<th style="text-align: right;">n_camadas_classificaram</th>
+<th style="text-align: left;">padrao_comparacao</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SYN0001</td>
+<td style="text-align: left;">B34</td>
+<td style="text-align: left;">Infecção viral de localização não especificada</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0002</td>
+<td style="text-align: left;">A39</td>
+<td style="text-align: left;">Infecção meningocócica</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">tres_camadas_concordantes</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0003</td>
+<td style="text-align: left;">B34</td>
+<td style="text-align: left;">Infecção viral de localização não especificada</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">tres_camadas_divergentes</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0004</td>
+<td style="text-align: left;">A08</td>
+<td style="text-align: left;">Infecções intestinais virais</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">tres_camadas_concordantes</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0005</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">regex_llm_concordam_sem_cid</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0006</td>
+<td style="text-align: left;">J06</td>
+<td style="text-align: left;">Infecções agudas das vias aéreas superiores</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">tres_camadas_concordantes</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0007</td>
+<td style="text-align: left;">A05</td>
+<td style="text-align: left;">Outras intoxicações alimentares bacterianas</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">cid_llm_concordam_regex_diverge</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0008</td>
+<td style="text-align: left;">R50</td>
+<td style="text-align: left;">Febre de origem desconhecida</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0009</td>
+<td style="text-align: left;">J06</td>
+<td style="text-align: left;">Infecções agudas das vias aéreas superiores</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0010</td>
+<td style="text-align: left;">G03</td>
+<td style="text-align: left;">Meningite devida a outras causas e a causas não especificadas</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">tres_camadas_concordantes</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0011</td>
+<td style="text-align: left;">G00</td>
+<td style="text-align: left;">Meningite bacteriana</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">tres_camadas_concordantes</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0012</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">divergencia_parcial</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="padrões-de-convergência-e-divergência" class="level2" data-number="9.5">
+<h2 data-number="9.5" class="anchored" data-anchor-id="padrões-de-convergência-e-divergência"><span class="header-section-number">9.5</span> Padrões de convergência e divergência</h2>
+<p>A tabela a seguir resume os principais padrões encontrados entre as três camadas.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>resumo_padroes <span class="ot">&lt;-</span> <span class="fu">summarise_comparacao_camadas</span>(comparacao_camadas)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  resumo_padroes,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Padrões de comparação entre CID, regex e LLM"</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Padrões de comparação entre CID, regex e LLM</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">padrao_comparacao</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">percentual</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">divergencia_parcial</td>
+<td style="text-align: right;">229</td>
+<td style="text-align: right;">32.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cid_regex_concordam_sem_llm</td>
+<td style="text-align: right;">156</td>
+<td style="text-align: right;">22.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">apenas_regex</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">13.9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">9.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tres_camadas_concordantes</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">8.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">apenas_cid</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">3.9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tres_camadas_divergentes</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">3.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">regex_llm_concordam_sem_cid</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">2.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sem_classificacao</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cid_llm_concordam_regex_diverge</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">1.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cid_regex_concordam_llm_diverge</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.7</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_padroes_comparacao</span>(comparacao_camadas)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="08-comparacao-cid-regex-llm_files/figure-html/grafico-padroes-comparacao-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption>Padrões de convergência e divergência entre CID, regex e LLM.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="disponibilidade-das-camadas" class="level2" data-number="9.6">
+<h2 data-number="9.6" class="anchored" data-anchor-id="disponibilidade-das-camadas"><span class="header-section-number">9.6</span> Disponibilidade das camadas</h2>
+<p>Nem todas as camadas classificam todos os atendimentos. Em especial, a camada CID depende de um código informativo; a regex depende da presença textual explícita de febre e sintomas; e a LLM pode retornar <code>nao_classificado</code> quando o texto não sustenta uma síndrome febril.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_camadas_disponiveis</span>(comparacao_camadas),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Disponibilidade de classificação por camada"</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Disponibilidade de classificação por camada</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">camada</th>
+<th style="text-align: right;">n_classificados</th>
+<th style="text-align: right;">total</th>
+<th style="text-align: right;">percentual</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">CID</td>
+<td style="text-align: right;">570</td>
+<td style="text-align: right;">700</td>
+<td style="text-align: right;">81.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">regex</td>
+<td style="text-align: right;">665</td>
+<td style="text-align: right;">700</td>
+<td style="text-align: right;">95.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LLM</td>
+<td style="text-align: right;">189</td>
+<td style="text-align: right;">700</td>
+<td style="text-align: right;">27.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="concordância-par-a-par" class="level2" data-number="9.7">
+<h2 data-number="9.7" class="anchored" data-anchor-id="concordância-par-a-par"><span class="header-section-number">9.7</span> Concordância par a par</h2>
+<p>A concordância par a par é calculada apenas entre registros comparáveis, isto é, registros nos quais as duas camadas em questão produziram uma classificação válida.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>concordancia_par_a_par <span class="ot">&lt;-</span> <span class="fu">summarise_concordancia_par_a_par</span>(comparacao_camadas)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  concordancia_par_a_par,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Concordância entre camadas, considerando apenas registros comparáveis"</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Concordância entre camadas, considerando apenas registros comparáveis</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">par</th>
+<th style="text-align: right;">n_comparavel</th>
+<th style="text-align: right;">n_concordante</th>
+<th style="text-align: right;">percentual_concordancia</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">CID × regex</td>
+<td style="text-align: right;">543</td>
+<td style="text-align: right;">221</td>
+<td style="text-align: right;">40.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CID × LLM</td>
+<td style="text-align: right;">164</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">40.9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">regex × LLM</td>
+<td style="text-align: right;">189</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: right;">76.7</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_concordancia_par_a_par</span>(comparacao_camadas)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="08-comparacao-cid-regex-llm_files/figure-html/grafico-concordancia-par-a-par-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption>Percentual de concordância entre camadas nos registros comparáveis.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="matriz-cid-llm" class="level2" data-number="9.8">
+<h2 data-number="9.8" class="anchored" data-anchor-id="matriz-cid-llm"><span class="header-section-number">9.8</span> Matriz CID × LLM</h2>
+<p>A matriz abaixo permite observar como a camada LLM se distribui dentro de cada classificação por CID. Essa análise é especialmente útil para identificar síndromes em que o texto clínico frequentemente não acompanha a hipótese codificada.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>matriz_cid_llm <span class="ot">&lt;-</span> <span class="fu">summarise_matriz_cid_llm</span>(comparacao_camadas)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  matriz_cid_llm <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">30</span>),</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Matriz de comparação CID × LLM"</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Matriz de comparação CID × LLM</caption>
+<colgroup>
+<col style="width: 36%">
+<col style="width: 36%">
+<col style="width: 3%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">sindrome_cid</th>
+<th style="text-align: left;">sindrome_llm</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">percentual_linha</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">62.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">34.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">73.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">24.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">50.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">25.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">12.5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">12.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">33.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">16.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">16.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">16.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">16.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">54.8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">29.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">16.1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">66.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">22.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">11.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">57.1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">22.9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">20.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="matriz-regex-llm" class="level2" data-number="9.9">
+<h2 data-number="9.9" class="anchored" data-anchor-id="matriz-regex-llm"><span class="header-section-number">9.9</span> Matriz regex × LLM</h2>
+<p>A comparação entre regex e LLM é uma comparação entre duas leituras textuais. A regex captura padrões explícitos; a LLM interpreta o texto de forma mais flexível, mas também pode ser mais sensível a ambiguidades.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>matriz_regex_llm <span class="ot">&lt;-</span> <span class="fu">summarise_matriz_regex_llm</span>(comparacao_camadas)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  matriz_regex_llm <span class="sc">|&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">30</span>),</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Matriz de comparação regex × LLM"</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Matriz de comparação regex × LLM</caption>
+<colgroup>
+<col style="width: 36%">
+<col style="width: 36%">
+<col style="width: 3%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">sindrome_regex</th>
+<th style="text-align: left;">sindrome_llm</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">percentual_linha</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">62.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">38.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">55.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">22.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">22.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">56.5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">34.8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">8.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="divergências-prioritárias-para-auditoria" class="level2" data-number="9.10">
+<h2 data-number="9.10" class="anchored" data-anchor-id="divergências-prioritárias-para-auditoria"><span class="header-section-number">9.10</span> Divergências prioritárias para auditoria</h2>
+<p>Para fins de revisão manual, são especialmente importantes os registros com CID informativo em que ao menos uma camada textual aponta outra síndrome, bem como os casos em que regex e LLM divergem entre si.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>resumo_divergencias <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">indicador =</span> <span class="fu">c</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Divergência com CID informativo"</span>,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Divergência textual regex × LLM"</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Três camadas divergentes"</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="fu">c</span>(</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sum</span>(comparacao_camadas<span class="sc">$</span>divergencia_com_cid_informativo, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sum</span>(comparacao_camadas<span class="sc">$</span>divergencia_textual_regex_llm, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sum</span>(comparacao_camadas<span class="sc">$</span>padrao_comparacao <span class="sc">==</span> <span class="st">"tres_camadas_divergentes"</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">percentual =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> .data<span class="sc">$</span>n <span class="sc">/</span> <span class="fu">nrow</span>(comparacao_camadas), <span class="dv">1</span>))</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  resumo_divergencias,</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Indicadores de divergência para auditoria"</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Indicadores de divergência para auditoria</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">indicador</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">percentual</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Divergência com CID informativo</td>
+<td style="text-align: right;">327</td>
+<td style="text-align: right;">46.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Divergência textual regex × LLM</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">6.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Três camadas divergentes</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">3.7</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>amostra_auditoria <span class="ot">&lt;-</span> <span class="fu">selecionar_amostra_auditoria</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">comparacao =</span> comparacao_camadas,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  amostra_auditoria <span class="sc">|&gt;</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>      record_id,</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">any_of</span>(<span class="fu">c</span>(<span class="st">"cid"</span>, <span class="st">"cid_nome"</span>)),</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>      sindrome_cid,</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>      sindrome_regex,</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>      sindrome_llm,</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>      padrao_comparacao,</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>      divergencia_com_cid_informativo,</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>      divergencia_textual_regex_llm,</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>      justificativa_llm</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Amostra de registros para auditoria da comparação entre camadas"</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Amostra de registros para auditoria da comparação entre camadas</caption>
+<colgroup>
+<col style="width: 2%">
+<col style="width: 1%">
+<col style="width: 14%">
+<col style="width: 6%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 7%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">record_id</th>
+<th style="text-align: left;">cid</th>
+<th style="text-align: left;">cid_nome</th>
+<th style="text-align: left;">sindrome_cid</th>
+<th style="text-align: left;">sindrome_regex</th>
+<th style="text-align: left;">sindrome_llm</th>
+<th style="text-align: left;">padrao_comparacao</th>
+<th style="text-align: left;">divergencia_com_cid_informativo</th>
+<th style="text-align: left;">divergencia_textual_regex_llm</th>
+<th style="text-align: left;">justificativa_llm</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SYN0001</td>
+<td style="text-align: left;">B34</td>
+<td style="text-align: left;">Infecção viral de localização não especificada</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0003</td>
+<td style="text-align: left;">B34</td>
+<td style="text-align: left;">Infecção viral de localização não especificada</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">tres_camadas_divergentes</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, exantema/manchas, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0007</td>
+<td style="text-align: left;">A05</td>
+<td style="text-align: left;">Outras intoxicações alimentares bacterianas</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">cid_llm_concordam_regex_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas gastrointestinais, compatível com febril_gastrointestinal.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0008</td>
+<td style="text-align: left;">R50</td>
+<td style="text-align: left;">Febre de origem desconhecida</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0009</td>
+<td style="text-align: left;">J06</td>
+<td style="text-align: left;">Infecções agudas das vias aéreas superiores</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, exantema/manchas, sintomas gastrointestinais, sintomas inespecíficos, compatível com febril_exantematica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0013</td>
+<td style="text-align: left;">B15</td>
+<td style="text-align: left;">Hepatite aguda A</td>
+<td style="text-align: left;">febril_ictero_hemorragica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Texto menciona febre, exantema/manchas, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0017</td>
+<td style="text-align: left;">A08</td>
+<td style="text-align: left;">Infecções intestinais virais</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">tres_camadas_divergentes</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, exantema/manchas, sintomas gastrointestinais, sangramento, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0018</td>
+<td style="text-align: left;">A08</td>
+<td style="text-align: left;">Infecções intestinais virais</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">cid_llm_concordam_regex_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas gastrointestinais, compatível com febril_gastrointestinal.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0019</td>
+<td style="text-align: left;">J10</td>
+<td style="text-align: left;">Influenza devida a outro vírus identificado</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, exantema/manchas, sintomas gastrointestinais, sintomas inespecíficos, compatível com febril_exantematica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0020</td>
+<td style="text-align: left;">R50</td>
+<td style="text-align: left;">Febre de origem desconhecida</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, exantema/manchas, sintomas inespecíficos, compatível com febril_exantematica.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0021</td>
+<td style="text-align: left;">J11</td>
+<td style="text-align: left;">Influenza devida a vírus não identificado</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, exantema/manchas, sintomas gastrointestinais, compatível com febril_exantematica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0023</td>
+<td style="text-align: left;">B34</td>
+<td style="text-align: left;">Infecção viral de localização não especificada</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">tres_camadas_divergentes</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, exantema/manchas, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0026</td>
+<td style="text-align: left;">A08</td>
+<td style="text-align: left;">Infecções intestinais virais</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">cid_llm_concordam_regex_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas gastrointestinais, compatível com febril_gastrointestinal.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0028</td>
+<td style="text-align: left;">A91</td>
+<td style="text-align: left;">Febre hemorrágica devida ao vírus da dengue</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Texto menciona febre, exantema/manchas, compatível com febril_exantematica.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0030</td>
+<td style="text-align: left;">A09</td>
+<td style="text-align: left;">Diarreia e gastroenterite de origem infecciosa presumível</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">cid_llm_concordam_regex_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas gastrointestinais, compatível com febril_gastrointestinal.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0034</td>
+<td style="text-align: left;">A08</td>
+<td style="text-align: left;">Infecções intestinais virais</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_neurologica_meningea</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">cid_llm_concordam_regex_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas gastrointestinais, compatível com febril_gastrointestinal.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0038</td>
+<td style="text-align: left;">B34</td>
+<td style="text-align: left;">Infecção viral de localização não especificada</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">tres_camadas_divergentes</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, exantema/manchas, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0039</td>
+<td style="text-align: left;">A08</td>
+<td style="text-align: left;">Infecções intestinais virais</td>
+<td style="text-align: left;">febril_gastrointestinal</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">tres_camadas_divergentes</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, exantema/manchas, sintomas gastrointestinais, sangramento, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SYN0040</td>
+<td style="text-align: left;">J11</td>
+<td style="text-align: left;">Influenza devida a vírus não identificado</td>
+<td style="text-align: left;">febril_respiratoria</td>
+<td style="text-align: left;">febril_exantematica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">tres_camadas_divergentes</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, exantema/manchas, sintomas gastrointestinais, sangramento, compatível com febril_hemorragica.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SYN0042</td>
+<td style="text-align: left;">B34</td>
+<td style="text-align: left;">Infecção viral de localização não especificada</td>
+<td style="text-align: left;">febril_inespecifica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">febril_hemorragica</td>
+<td style="text-align: left;">regex_llm_concordam_cid_diverge</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Texto menciona febre, sintomas respiratórios, sintomas gastrointestinais, sangramento, sintomas inespecíficos, compatível com febril_hemorragica.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="persistência-da-comparação" class="level2" data-number="9.11">
+<h2 data-number="9.11" class="anchored" data-anchor-id="persistência-da-comparação"><span class="header-section-number">9.11</span> Persistência da comparação</h2>
+<p>A base de comparação é persistida no DuckDB para permitir auditoria posterior e uso nos próximos capítulos.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_comparacao_camadas</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">con =</span> con,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dados =</span> comparacao_camadas,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">overwrite =</span> <span class="cn">TRUE</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="fu">write_execution_log</span>(</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">con =</span> con,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">etapa =</span> <span class="st">"comparacao_cid_regex_llm"</span>,</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_registros =</span> <span class="fu">nrow</span>(comparacao_camadas),</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">observacao =</span> <span class="st">"Comparação entre camadas CID, regex e LLM."</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">duckdb_counts</span>(con),</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Tabelas persistidas no DuckDB após a comparação entre camadas"</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Tabelas persistidas no DuckDB após a comparação entre camadas</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">tabela</th>
+<th style="text-align: right;">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">tb_atendimentos</td>
+<td style="text-align: right;">700</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tb_classificacao_cid</td>
+<td style="text-align: right;">700</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tb_classificacao_final</td>
+<td style="text-align: right;">700</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tb_classificacao_llm</td>
+<td style="text-align: right;">200</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tb_classificacao_regex</td>
+<td style="text-align: right;">700</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tb_comparacao_camadas</td>
+<td style="text-align: right;">700</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tb_execucoes</td>
+<td style="text-align: right;">158</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="interpretação" class="level2" data-number="9.12">
+<h2 data-number="9.12" class="anchored" data-anchor-id="interpretação"><span class="header-section-number">9.12</span> Interpretação</h2>
+<p>A comparação entre camadas deve ser interpretada como uma etapa de diagnóstico do pipeline. Registros convergentes indicam maior estabilidade operacional entre fontes distintas de informação. Registros divergentes, por outro lado, não devem ser automaticamente tratados como erro: eles apontam situações que exigem revisão metodológica ou clínica.</p>
+<p>Para a próxima etapa, a base <code>tb_comparacao_camadas</code> servirá de entrada para a classificação final. Nessa etapa posterior, a regra já definida será aplicada: quando o CID for informativo, ele será respeitado; quando estiver ausente ou não informativo, as camadas textuais poderão apoiar a classificação.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Ver código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con, <span class="at">shutdown =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./07-classificacao-llm.html" class="pagination-link" aria-label="Classificação por LLM">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Classificação por LLM</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./09-classificacao-final.html" class="pagination-link" aria-label="Classificação final">
+        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Classificação final</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

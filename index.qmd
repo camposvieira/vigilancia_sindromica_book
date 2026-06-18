@@ -1,0 +1,28 @@
+# Apresentação
+
+Este material apresenta uma proposta metodológica e técnica para classificar atendimentos febris a partir de campos textuais de prontuários eletrônicos, especialmente queixa e anamnese.
+
+A proposta combina três camadas:
+
+<span class="badge badge-cid">CID soberano</span>
+<span class="badge badge-regex">Regras regex</span>
+<span class="badge badge-llm">LLM como segunda opinião</span>
+
+O objetivo não é substituir avaliação clínica ou epidemiológica, mas estruturar um fluxo auditável para apoiar a vigilância sindrômica com dados textuais.
+
+::: {.callout-note}
+## Escopo desta versão
+
+Esta versão usa definições operacionais iniciais, uma base sintética e funções parametrizáveis. As definições poderão ser ajustadas posteriormente com os gestores e especialistas do projeto.
+:::
+
+## Produto esperado
+
+Ao final do fluxo, cada atendimento deverá conter:
+
+- classificação por CID, quando disponível;
+- classificação por regex;
+- classificação por LLM;
+- indicação de convergência ou divergência entre regex e LLM;
+- classificação final, respeitando a soberania do CID;
+- justificativa curta do LLM.

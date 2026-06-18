@@ -1,0 +1,237 @@
+# Preparação e padronização dos dados
+
+Este capítulo apresenta a base sintética utilizada para desenvolver e demonstrar o pipeline antes do recebimento dos dados reais. A proposta é simular uma base minimamente realista, com variação temporal, múltiplas unidades, perfis demográficos, CIDs, textos clínicos heterogêneos e ruídos frequentes em anamnese.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+source("R/00_pacotes.R")
+source("R/02_input_normalization.R")
+source("R/03_generate_synthetic_data.R")
+source("R/04_data_quality.R")
+source("R/04_duckdb.R")
+```
+
+## Visão geral
+
+A base sintética tem quatro finalidades:
+
+1. permitir o desenvolvimento do pipeline sem depender da base real;
+2. testar a robustez das regras diante de textos imperfeitos;
+3. simular CIDs coerentes, ausentes e conflitantes;
+4. demonstrar as saídas esperadas para gestores e equipe técnica.
+
+::: {.callout-note}
+## Uso com dados reais
+
+Quando a base real estiver disponível, a etapa de geração sintética será substituída pela leitura da base do cliente. O restante do pipeline será mantido, desde que os campos sejam mapeados para o schema interno.
+:::
+
+## Geração da base sintética
+
+A base é gerada de forma reprodutível, usando uma semente fixa. Caso o arquivo ainda não exista, ele será criado automaticamente.
+
+```{r}
+if (!file.exists("data/atendimentos_sinteticos.csv")) {
+  save_synthetic_attendances(
+    path = "data/atendimentos_sinteticos.csv",
+    n = 700,
+    seed = 123
+  )
+}
+
+dados_raw <- readr::read_csv(
+  "data/atendimentos_sinteticos.csv",
+  show_col_types = FALSE
+)
+
+dplyr::glimpse(dados_raw)
+```
+
+## Schema interno
+
+O pipeline trabalhará sempre com um conjunto mínimo de campos padronizados.
+
+| Campo | Descrição |
+|---|---|
+| `record_id` | Identificador único do atendimento |
+| `data_atendimento` | Data do atendimento |
+| `unidade` | Unidade de saúde |
+| `territorio` | Território ou área programática simulada |
+| `bairro` | Bairro simulado |
+| `idade` | Idade em anos |
+| `faixa_etaria` | Faixa etária padronizada |
+| `sexo` | Sexo informado |
+| `cid` | CID principal ou relacionado |
+| `cid_nome` | Nome ou descrição do CID |
+| `queixa` | Queixa principal |
+| `anamnese` | Texto da anamnese |
+| `texto_clinico` | Campo textual consolidado |
+| `texto_clinico_norm` | Texto clínico normalizado |
+
+## Mapeamento da base
+
+Mesmo que a base do cliente tenha nomes diferentes, o pipeline depende apenas do mapeamento correto.
+
+```{r}
+mapping_sintetico <- list(
+  record_id = "record_id",
+  data_atendimento = "data_atendimento",
+  unidade = "unidade",
+  idade = "idade",
+  sexo = "sexo",
+  cid = "cid",
+  queixa = "queixa",
+  anamnese = "anamnese"
+)
+
+dados <- normalize_input_data(
+  df = dados_raw,
+  mapping = mapping_sintetico
+)
+
+dados <- dados |>
+  dplyr::left_join(
+    dados_raw |>
+      dplyr::select(
+        record_id,
+        territorio,
+        bairro,
+        cid_nome,
+        sindrome_esperada_sintetica,
+        cid_status_sintetico,
+        febre_negada_sintetica
+      ),
+    by = "record_id"
+  )
+```
+
+## Indicadores de qualidade
+
+```{r}
+summarise_data_quality(dados) |>
+  knitr::kable()
+```
+
+## Distribuição temporal
+
+```{r}
+plot_temporal_distribution(dados)
+```
+
+## Distribuição por unidade
+
+```{r}
+plot_bar_distribution(
+  dados,
+  unidade,
+  "Distribuição dos atendimentos por unidade"
+)
+```
+
+## Distribuição por território
+
+```{r}
+plot_bar_distribution(
+  dados,
+  territorio,
+  "Distribuição dos atendimentos por território"
+)
+```
+
+## Distribuição por faixa etária
+
+```{r}
+plot_bar_distribution(
+  dados,
+  faixa_etaria,
+  "Distribuição dos atendimentos por faixa etária"
+)
+```
+
+## Distribuição por sexo
+
+```{r}
+plot_bar_distribution(
+  dados,
+  sexo,
+  "Distribuição dos atendimentos por sexo"
+)
+```
+
+## Perfil dos CIDs na base sintética
+
+```{r}
+dados |>
+  dplyr::count(cid_status_sintetico, sort = TRUE) |>
+  knitr::kable()
+```
+
+## Exemplos de textos clínicos
+
+Abaixo são apresentados exemplos de textos sintéticos. Eles incluem variações de escrita, erros comuns, caixa alta, ausência de acentos, abreviações, sintomas misturados e negações.
+
+```{r}
+dados |>
+  dplyr::select(
+    record_id,
+    data_atendimento,
+    unidade,
+    sexo,
+    idade,
+    cid,
+    cid_status_sintetico,
+    texto_clinico
+  ) |>
+  dplyr::slice_sample(n = 10) |>
+  knitr::kable()
+```
+
+## Persistência em DuckDB
+
+A base padronizada é persistida em um banco local DuckDB. Essa etapa antecipa a lógica de produto: cada resultado intermediário do pipeline poderá ser salvo e auditado.
+
+```{r}
+con <- connect_duckdb()
+init_duckdb_schema(con)
+
+run_id <- new_run_id("preparacao")
+
+write_atendimentos(
+  con = con,
+  dados = dados,
+  overwrite = TRUE
+)
+
+write_execution_log(
+  con = con,
+  run_id = run_id,
+  etapa = "preparacao_dados",
+  n_registros = nrow(dados),
+  observacao = "Carga sintética padronizada e persistida em tb_atendimentos."
+)
+
+duckdb_counts(con) |>
+  knitr::kable()
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```
+
+## Observações para implantação
+
+A base sintética não substitui a avaliação com dados reais. Seu papel é permitir o desenvolvimento inicial e a demonstração do método. Na implantação, a equipe deverá avaliar:
+
+- completude dos campos textuais;
+- padronização dos CIDs;
+- presença de abreviações locais;
+- frequência de campos vazios;
+- qualidade da data de atendimento;
+- existência de múltiplos textos por atendimento;
+- necessidade de regras específicas por serviço ou unidade.
+
+::: {.callout-important}
+## Ponto metodológico
+
+A capacidade de adaptar o mapeamento de campos é central para o produto. O pipeline não deve depender do nome original das colunas da base do cliente, mas sim do schema interno definido neste documento.
+:::

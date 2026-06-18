@@ -1,0 +1,186 @@
+---
+title: "Séries históricas"
+---
+
+```{r}
+#| label: setup-series-historicas
+#| message: false
+#| warning: false
+
+source("R/00_pacotes.R")
+source("R/04_duckdb.R")
+source("R/11_series_historicas.R")
+```
+
+## Objetivo
+
+Este capítulo transforma a classificação final em uma leitura temporal e operacional. A partir de uma síndrome final única por atendimento, é possível acompanhar a evolução diária, semanal e mensal dos registros classificados, bem como identificar semanas, unidades e síndromes com maior volume.
+
+Nesta etapa, o foco ainda é descritivo. Não são aplicados modelos de detecção de anomalias, limiares estatísticos ou alertas automáticos. O objetivo é demonstrar como a base classificada pode alimentar rotinas de monitoramento temporal.
+
+## Leitura da classificação final
+
+```{r}
+#| label: ler-classificacao-final-series
+
+con <- connect_duckdb()
+init_duckdb_schema(con)
+
+classificacao_final <- read_classificacao_final(con)
+
+list(
+  registros = nrow(classificacao_final),
+  colunas = ncol(classificacao_final)
+)
+```
+
+## Período analisado
+
+```{r}
+#| label: resumo-periodo-series
+
+knitr::kable(
+  summarise_series_periodo(classificacao_final),
+  caption = "Resumo do período disponível para análise temporal"
+)
+```
+
+## Distribuição geral por síndrome final
+
+```{r}
+#| label: tabela-distribuicao-sindromes-series
+
+knitr::kable(
+  summarise_sindromes_final(classificacao_final),
+  caption = "Distribuição dos atendimentos segundo a síndrome final"
+)
+```
+
+```{r}
+#| label: grafico-distribuicao-sindromes-series
+#| fig-cap: "Distribuição dos atendimentos segundo a classificação final."
+
+plot_distribuicao_sindromes_series(classificacao_final)
+```
+
+## Série diária
+
+A série diária permite observar a variação do volume de atendimentos classificados ao longo do período. Em bases reais, essa visualização pode apoiar o acompanhamento de sazonalidade, eventos localizados, falhas de alimentação e mudanças abruptas no padrão de registros.
+
+```{r}
+#| label: tabela-serie-diaria-total
+
+serie_diaria_total <- build_serie_diaria_total(classificacao_final)
+
+knitr::kable(
+  serie_diaria_total |>
+    dplyr::slice_head(n = 15),
+  caption = "Primeiros dias da série diária de atendimentos classificados"
+)
+```
+
+```{r}
+#| label: grafico-serie-diaria-total
+#| fig-cap: "Série diária de atendimentos classificados."
+
+plot_serie_diaria_total(classificacao_final)
+```
+
+## Série semanal
+
+A agregação semanal reduz oscilações de curto prazo e facilita a leitura operacional. Para vigilância sindrômica, a semana epidemiológica costuma ser uma unidade útil para relatórios de rotina.
+
+```{r}
+#| label: tabela-serie-semanal-total
+
+serie_semanal_total <- build_serie_semanal_total(classificacao_final)
+
+knitr::kable(
+  serie_semanal_total |>
+    dplyr::slice_head(n = 15),
+  caption = "Primeiras semanas da série semanal de atendimentos classificados"
+)
+```
+
+```{r}
+#| label: grafico-serie-semanal-total
+#| fig-cap: "Série semanal de atendimentos classificados."
+
+plot_serie_semanal_total(classificacao_final)
+```
+
+## Série semanal por síndrome
+
+```{r}
+#| label: tabela-serie-semanal-sindrome
+
+serie_semanal_sindrome <- build_serie_semanal(classificacao_final)
+
+knitr::kable(
+  serie_semanal_sindrome |>
+    dplyr::slice_head(n = 20),
+  caption = "Exemplo da série semanal por síndrome final"
+)
+```
+
+```{r}
+#| label: grafico-serie-semanal-sindrome
+#| fig-cap: "Série semanal estratificada por síndrome final."
+
+plot_serie_semanal_por_sindrome(classificacao_final)
+```
+
+## Semanas com maior volume
+
+```{r}
+#| label: tabela-semanas-maior-volume
+
+knitr::kable(
+  summarise_semanas_maior_volume(classificacao_final, n = 10),
+  caption = "Semanas com maior volume de atendimentos classificados"
+)
+```
+
+## Distribuição por unidade
+
+A leitura por unidade permite identificar concentração de registros em serviços específicos. Em uma base real, essa informação deve ser interpretada em conjunto com volume assistencial, perfil da unidade, cobertura territorial e completude do registro clínico.
+
+```{r}
+#| label: tabela-unidades-maior-volume
+
+knitr::kable(
+  summarise_unidades_maior_volume(classificacao_final, n = 15),
+  caption = "Unidades com maior volume de atendimentos classificados"
+)
+```
+
+```{r}
+#| label: grafico-unidades-maior-volume
+#| fig-cap: "Unidades com maior volume de atendimentos classificados."
+
+plot_unidades_maior_volume(classificacao_final, n = 15)
+```
+
+## Síndrome por unidade
+
+```{r}
+#| label: tabela-unidade-sindrome
+
+knitr::kable(
+  summarise_unidade_sindrome(classificacao_final, n_unidades = 10) |>
+    dplyr::slice_head(n = 40),
+  caption = "Distribuição das síndromes finais nas unidades com maior volume"
+)
+```
+
+## Interpretação
+
+As séries históricas demonstram como a classificação final pode ser transformada em uma camada de monitoramento. Em um cenário operacional, essas saídas podem ser usadas para acompanhamento semanal, painéis gerenciais, exportações automatizadas e seleção de recortes para auditoria.
+
+Nesta versão do Quarto Book, a análise temporal é descritiva. O próximo passo metodológico pode incluir distribuição territorial, monitoramento por unidade, auditoria de registros divergentes ou detecção de anomalias temporais.
+
+```{r}
+#| label: fechar-conexao-series
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```

@@ -1,0 +1,177 @@
+# Classificação por regex
+
+Este capítulo apresenta a segunda camada do pipeline: a classificação sindrômica por regras textuais. Diferentemente do CID, que depende do código registrado, a regex explora os campos de texto livre da queixa e da anamnese.
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+source("R/00_pacotes.R")
+source("R/02_input_normalization.R")
+source("R/03_generate_synthetic_data.R")
+source("R/04_duckdb.R")
+source("R/05_cid_classification.R")
+source("R/06_regex_classification.R")
+```
+
+## Princípio da camada regex
+
+A classificação por regex busca evidências textuais de febre e sintomas associados. Esta camada é especialmente útil quando o CID está ausente, inespecífico ou pouco informativo.
+
+::: {.callout-important}
+## Regra central
+
+A regex só atribui uma síndrome febril quando há evidência textual de febre não negada. Textos com `nega febre`, `sem febre`, `afebril` ou expressões equivalentes não são classificados como síndrome febril pela camada textual.
+:::
+
+## Dicionário de sintomas
+
+O dicionário foi construído para capturar termos formais, informais, abreviações, grafias sem acento e erros comuns de escrita.
+
+A tabela abaixo mostra uma versão **legível** do dicionário. As expressões regulares completas ficam no script `R/06_regex_classification.R`.
+
+```{r}
+get_regex_dictionary_display() |>
+  knitr::kable()
+```
+
+## Carga da base padronizada
+
+```{r}
+if (!file.exists("data/atendimentos_sinteticos.csv")) {
+  save_synthetic_attendances(path = "data/atendimentos_sinteticos.csv", n = 700, seed = 123)
+}
+
+dados_raw <- readr::read_csv("data/atendimentos_sinteticos.csv", show_col_types = FALSE)
+
+mapping_sintetico <- list(
+  record_id = "record_id", data_atendimento = "data_atendimento", unidade = "unidade",
+  idade = "idade", sexo = "sexo", cid = "cid", queixa = "queixa", anamnese = "anamnese"
+)
+
+dados <- normalize_input_data(df = dados_raw, mapping = mapping_sintetico)
+
+dados <- dados |>
+  dplyr::left_join(
+    dados_raw |>
+      dplyr::select(record_id, territorio, bairro, cid_nome, sindrome_esperada_sintetica,
+                    cid_status_sintetico, febre_negada_sintetica),
+    by = "record_id"
+  )
+```
+
+## Classificação por CID e regex
+
+O CID é calculado novamente para permitir a comparação entre as camadas.
+
+```{r}
+dados_cid <- classify_by_cid(dados)
+
+dados_regex <- dados_cid |>
+  classify_by_regex() |>
+  compare_cid_regex()
+
+summarise_regex_classification(dados_regex) |>
+  knitr::kable()
+```
+
+## Distribuição das classificações por regex
+
+```{r}
+plot_regex_syndrome_distribution(dados_regex)
+```
+
+## Marcadores textuais identificados
+
+```{r}
+dados_regex |>
+  dplyr::summarise(
+    febre = sum(flag_febre, na.rm = TRUE),
+    febre_negada = sum(flag_febre_negada, na.rm = TRUE),
+    respiratorio = sum(flag_respiratorio, na.rm = TRUE),
+    exantematico = sum(flag_exantematico, na.rm = TRUE),
+    gastrointestinal = sum(flag_gastrointestinal, na.rm = TRUE),
+    hemorragico = sum(flag_hemorragico, na.rm = TRUE),
+    icterico = sum(flag_icterico, na.rm = TRUE),
+    neurologico_meningeo = sum(flag_neurologico_meningeo, na.rm = TRUE),
+    inespecifico = sum(flag_inespecifico, na.rm = TRUE)
+  ) |>
+  tidyr::pivot_longer(cols = dplyr::everything(), names_to = "marcador", values_to = "n") |>
+  dplyr::arrange(dplyr::desc(n)) |>
+  knitr::kable()
+```
+
+## Convergência entre CID e regex
+
+```{r}
+dados_regex |>
+  dplyr::count(convergencia_cid_regex, sort = TRUE) |>
+  knitr::kable()
+```
+
+## Exemplos classificados por regex
+
+```{r}
+dados_regex |>
+  dplyr::filter(regex_classificado) |>
+  dplyr::select(record_id, cid_original, classificacao_cid, sindrome_principal_regex, sintomas_regex, texto_clinico) |>
+  dplyr::slice_head(n = 15) |>
+  knitr::kable()
+```
+
+## Exemplos com febre negada
+
+Estes casos são importantes para verificar se a regra textual não está classificando automaticamente qualquer menção à palavra febre.
+
+```{r}
+dados_regex |>
+  dplyr::filter(flag_febre_negada) |>
+  dplyr::select(record_id, classificacao_cid, sindrome_principal_regex, fonte_classificacao_regex, texto_clinico) |>
+  dplyr::slice_head(n = 10) |>
+  knitr::kable()
+```
+
+## Exemplos de divergência CID × regex
+
+A divergência pode ocorrer por erro ou incompletude do CID, por registro textual ambíguo, por múltiplos sintomas no texto ou por limitação da regra textual.
+
+```{r}
+dados_regex |>
+  dplyr::filter(convergencia_cid_regex == "divergente") |>
+  dplyr::select(record_id, cid_original, classificacao_cid, sindrome_principal_regex, sintomas_regex, texto_clinico) |>
+  dplyr::slice_head(n = 10) |>
+  knitr::kable()
+```
+
+## Persistência em DuckDB
+
+```{r}
+con <- connect_duckdb()
+init_duckdb_schema(con)
+
+write_classificacao_regex(con = con, dados_regex = dados_regex, overwrite = TRUE)
+
+write_execution_log(
+  con = con,
+  run_id = new_run_id("regex"),
+  etapa = "classificacao_regex",
+  n_registros = nrow(dados_regex),
+  observacao = "Classificação sindrômica por regex persistida em tb_classificacao_regex."
+)
+
+duckdb_counts(con) |>
+  knitr::kable()
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```
+
+## Interpretação
+
+A camada regex aumenta a capacidade de classificação quando o CID está ausente ou pouco informativo. Ao mesmo tempo, ela mantém rastreabilidade, pois cada decisão decorre de marcadores textuais explícitos.
+
+Na arquitetura final, a regex não substitui o CID. Ela cumpre três funções principais:
+
+- classificar registros sem CID informativo;
+- auditar divergências entre CID e texto;
+- fornecer uma base interpretável para comparação com a camada LLM.
