@@ -10,6 +10,14 @@ O projeto combina três camadas de classificação:
 
 A saída final é uma classificação sindrômica única por atendimento, mantendo rastreabilidade da decisão, comparação entre camadas e critérios de auditoria.
 
+## Documentação completa
+
+A documentação detalhada de instalação, execução, configuração do DuckDB, uso opcional com LLM real, inclusão de novos dados e adaptação para bases reais está disponível em:
+
+```text
+docs/INSTALACAO_E_EXECUCAO.md
+```
+
 ## Objetivo
 
 Produzir uma entrega profissional, reprodutível e apresentável para gestores e equipe técnica, antes do recebimento da base real.
