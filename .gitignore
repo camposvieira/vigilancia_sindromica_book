@@ -1,0 +1,30 @@
+# R / RStudio
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+
+# Quarto cache/intermediários
+.quarto/
+*_files/
+*.knit.md
+
+# DuckDB temporários / locks
+*.duckdb.wal
+*.duckdb.tmp
+
+# Ambiente local e segredos
+.Renviron
+
+# Dados reais e testes locais
+data/*real*.csv
+data/*reais*.csv
+data/base_real_original.csv
+data/atendimentos_reais_teste.csv
+
+outputs/teste_llm_local_qwen_30_registros.csv
+outputs/teste_llm_local_qwen_30_metricas.csv
+outputs/teste_llm_local_qwen_30_distribuicao_sindromes.csv
+
+# Logs locais
+*.log
