@@ -38,6 +38,8 @@ list(
 
 ```{r}
 #| label: resumo-periodo-series
+#| message: false
+#| warning: false
 
 knitr::kable(
   summarise_series_periodo(classificacao_final),
